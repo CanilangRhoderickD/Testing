@@ -1,0 +1,246 @@
+INTRODUCTION
+Rationale
+Fire incidents are a persistent threat to the safety and
+well-being of individuals, businesses, and communities. In 2024,
+the city of Baguio experienced a concerning rise in fire-related
+incidents, endangering lives, causing significant property
+damage, and disrupting local economies. These incidents highlight
+the urgent need for effective fire prevention measures to protect
+residents and businesses from the devastating impacts of fire.
+Fire mitigation is particularly crucial in urban areas, as
+previous studies have shown that fire disasters not only result
+in great economic losses but also pose significant challenges to
+community restoration and safety. According to Kurata et al.
+(2022), understanding the factors affecting fire mitigation
+behaviors among citizens is essential to designing effective
+prevention strategies, particularly in densely populated regions
+like urban centers.
+Fire-related risks are often exacerbated by a lack of
+awareness, inadequate fire safety education, and neglect of
+essential preventive measures such as regular inspections, proper
+equipment maintenance, and compliance with safety standards.
+According to the Bureau of Fire Protection (BFP), smoking and
+open flames from cooking accounted for 190 and 155 fire cases,
+respectively, during the first quarter of 2024. Electrical
+
+ignition also posed a significant risk, with 144 cases caused by
+arcing, 97 by loose connections, and 62 by overloading (BFP,
+2024). These statistics underscore the pressing need for
+heightened fire safety awareness, particularly in residential
+settings, to address preventable causes effectively. Despite the
+presence of fire safety regulations, gaps in implementation and
+enforcement, combined with limited access to resources and
+professional expertise, leave communities vulnerable. Addressing
+these gaps requires a multi-faceted approach, including enhanced
+education, stronger enforcement of safety standards, and improved
+access to fire prevention tools and training.
+This capstone project aligns with the United Nations
+Sustainable Development Goal (SDG) 11, Sustainable Cities and
+Communities, by focusing on enhancing fire safety in Baguio City
+through innovative and proactive solutions. Recognizing the vital
+role of education and engagement in fostering a culture of
+safety, the project aims to empower residents with the knowledge,
+tools, and motivation to prevent and respond to fire incidents
+effectively. Specifically, the project contributes to SDG target
+11.5, which seeks to significantly reduce the number of deaths,
+people affected, and economic losses caused by disasters by 2030,
+with a focus on protecting vulnerable populations (Global Goals
+Website). By addressing fire safety risks, this initiative aligns
+Approval Sheet 2
+with the goal of mitigating the adverse effects of disasters and
+fostering resilience within communities.
+The Baguio City Bureau of Fire Protection (BFP) expressed
+deep concern over the rising number of fire incidents in the
+city, particularly those involving residential areas. Fire
+Officer Ola Bai-wo emphasized that these fires not only endanger
+lives but also strain their resources, making it increasingly
+challenging to respond effectively to emergencies. The station
+also highlighted recurring issues such as the public's limited
+awareness of fire safety protocols and the widespread neglect of
+preventive measures, including regular inspections and the use of
+standard materials for electrical installations. These sentiments
+underscore the need for community-based solutions that prioritize
+education, collaboration, and proactive measures to mitigate fire
+risks and foster a safer environment for all residents.
+Project Objectives
+ The main objective of this study is to develop a gamified
+web-based application that enhances fire safety awareness and
+prevention practices among residents of Baguio City.
+Specifically, it aims to achieve the following:
+
+1. Educate users on fire prevention measures, including proper
+electrical wiring practices and handling of open flames.
+2. Promote regular fire safety inspections through gamified
+tasks and incentives.
+3. Enhance community preparedness by simulating real-life fire
+scenarios and response techniques.
+4. Foster collaboration with local authorities and
+professionals to ensure accurate and practical fire safety
+guidelines.
+Proposed Solutions
+To address the persistent issue of fire incidents in Baguio
+City, this study proposes the development of a gamified web-based
+application as a comprehensive fire safety solution. The
+application combines education, technology, and community
+engagement to empower residents with practical knowledge and
+tools for fire prevention and response.
+The proposed application will feature interactive
+educational modules for both children and adults, using gamified
+elements such as challenges, rewards, and progressive levels to
+sustain engagement.
+Approval Sheet 2
+By incorporating this IT emerging technology, the solution
+aims to bridge existing gaps in fire safety education, improve
+awareness, and foster a proactive approach to fire prevention
+within the community.
+(3-7 pages
+
+Chapter 2
+DESIGN THINKING
+This chapter discusses the design thinking methodologies,
+and the different phases the researchers have undertaken to
+identify and validate the problem and solution based on user
+feedback.
+Introduction to Design Thinking
+Design thinking is a user-centered methodology that guided
+the researchers in understanding the core issues of the study,
+identifying effective solutions, and ensuring that the proposed
+system is user-friendly. By focusing on user feedback and
+iterative testing, design thinking helped uncover key features
+that would address both the primary and secondary challenges
+identified throughout the research process. This approach not
+only provided a structured framework for problem-solving but also
+ensured that the final solution would be both practical and
+tailored to the needs of the users, making the system more
+accessible and relevant.
+Figure 1
+Design Thinking Methodologies
+Approval Sheet 2
+As illustrated in the table/figure before this section, the
+design thinking methodology is broken down into five main stages:
+Empathize, Define, Ideate, Prototype, and Test. These stages are
+designed to help researchers approach complex problems in a usercentric manner, fostering creativity and innovation while
+addressing the real needs of users. Each stage builds on the
+previous one, allowing for a structured yet flexible process. The
+"Empathize" phase involves gaining a deep understanding of users’
+needs, while the "Define" phase focuses on clearly articulating
+the problem. "Ideate" sparks brainstorming of potential
+solutions, followed by "Prototype," where these ideas are brought
+to life in tangible forms. Finally, "Test" involves evaluating
+prototypes and gathering feedback for further refinement. The
+following sections delve deeper into the researchers’ approach
+and processes during each of these stages, providing further
+insight into how these phases were applied in the study.
+
+Empathize
+Empathize. The researchers focused on deeply understanding
+the experiences and challenges faced by residents regarding fire
+safety. This involved engaging with the target users through
+interviews, surveys, and observations to gather qualitative data
+about their perceptions, behaviors, and knowledge gaps related to
+fire prevention. By immersing themselves in the users'
+environments, the researchers aimed to uncover the emotional and
+practical barriers that hinder effective fire safety practices.
+This empathetic approach ensured that the subsequent design
+solutions would be grounded in real user needs, fostering a more
+impactful educational experience.
+Figure 2
+5-Why Analysis
+
+ The analysis begins by addressing immediate causes, such as
+faulty wiring and overload circuits, and traces these issues back
+through several layers. These include aging infrastructure, poor
+Approval Sheet 2
+workmanship, and a lack of resident awareness and training on
+fire safety. Further investigation reveals systemic issues, such
+as inadequate maintenance, the use of substandard materials, and
+insufficient government funding for safety initiatives.
+At the root of these problems, the paper highlights a
+culture of under-prioritization of fire safety, where cost-saving
+measures, over-reliance on DIY solutions, and a general lack of
+awareness about risks and regulations persist. The research
+emphasizes the importance of improving education, enforcement,
+and access to professional services to mitigate fire risks and
+safeguard lives.
+The paper concludes by proposing targeted solutions to
+address these root causes, including enhanced fire safety
+education, stricter enforcement of regulations, and investment in
+quality materials and professional installations. It calls for a
+comprehensive approach to fire safety that integrates public
+awareness, infrastructure improvements, and proactive safety
+practices.
+Figure 3
+Empathy Map
+
+In the empathizing stage of this research, we identified
+several key challenges and insights regarding individuals'
+approach to fire safety in the home. Many participants do not
+regularly inspect electrical wiring due to a lack of knowledge or
+awareness about the correct procedures for such inspections. Fire
+safety drills, if conducted at all, are often sporadic and
+typically limited to specific periods, such as fire prevention
+month, rather than being implemented as part of a regular safety
+routine. There is also a tendency to forget to unplug appliances
+or charging devices, which increases the potential for electrical
+fires. Financial constraints were a recurring theme, with many
+individuals citing budget limitations as a barrier to purchasing
+necessary fire safety equipment or hiring professional services
+for home inspections. Furthermore, participants expressed
+Approval Sheet 2
+unawareness about the proper methods for inspecting electrical
+wiring in the home, and a general reluctance to attend fire
+safety seminars due to time constraints and other competing
+priorities. When discussing fire safety programs, participants
+often noted that these initiatives were not as effective as they
+could be, highlighting the absence of hands-on training (e.g.,
+using fire extinguishers). Emotional responses to these barriers
+included a sense of anxiety about the possibility of fire
+incidents, coupled with a feeling of helplessness due to limited
+resources and knowledge. While there was a strong concern for
+family safety, many felt overwhelmed by the complexity of fire
+safety maintenance, particularly in the context of busy
+schedules. Participants also expressed guilt for not taking more
+proactive action, though this sentiment was tempered by the
+understanding that time and budget constraints significantly
+hindered their ability to engage in regular fire safety
+practices.
+Define
+Define. On this stage of the design thinking, the
+researchers should be able to identify the values that they could
+offer to their target users. The researchers created a value
+proposition canvas for them to identify the needs of their target
+users and to Identify the features that they must create for the
+system to be useful for the target users.
+Figure 4
+Value Proposition Canvas
+
+ The figure above presents how the researchers analyze the
+problems encountered by their target users. On the right side of
+the figure 4, It expresses the struggles and insights of the
+target users. While on the left are the proposed solutions to
+satisfy the needs and resolve the problems encountered by the
+target users.
+Ideate
+Ideate. The researchers brainstormed a wide range of
+potential solutions to address the identified challenges related
+to fire safety education. This phase encouraged creativity and
+open-mindedness, allowing the team to explore various concepts
+without immediate judgment or limitations.
+Approval Sheet 2
+The goal was to generate innovative ideas that could
+effectively engage users and enhance their understanding of fire
+prevention. The researchers considered incorporating gamification
+elements, interactive simulations, and real-life scenarios to
+make the learning experience more relatable and enjoyable. By
+leveraging user feedback gathered during the "Empathize" phase,
+the team aimed to ensure that the proposed solutions would
+resonate with the target audience, ultimately fostering a deeper
+commitment to fire safety practices.
+Through collaborative brainstorming sessions, the
+researchers identified key features that could be integrated into
+the web-based application, such as quizzes, challenges, and
+rewards systems, which would not only educate users but also
+motivate them to actively participate in fire prevention efforts.
+This ideation process was crucial in laying the foundation for
+the subsequent prototyping and testing stages, ensuring that the
+final product would be both effective and user-friendly
