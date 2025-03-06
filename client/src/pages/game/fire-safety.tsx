@@ -94,6 +94,22 @@ export default function FireSafetyGame() {
   const renderPictureWordContent = (data: any) => {
     const state = gameState.pictureWord || { userGuess: "", attempts: 0 };
 
+    const handlePictureWordGuess = (guess: string) => {
+      setGameState(prev => ({
+        ...prev,
+        pictureWord: {
+          userGuess: guess,
+          attempts: prev.pictureWord?.attempts ? prev.pictureWord.attempts + 1 : 1
+        }
+      }));
+
+      // Check if the guess is correct
+      if (guess.toLowerCase() === data.correctWord.toLowerCase()) {
+        play("success");
+        submitProgress(selectedModule!.id, 100);
+      }
+    };
+
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
@@ -143,7 +159,7 @@ export default function FireSafetyGame() {
           userGuess: guess
         }
       }));
-      
+
       // Check if the guess is correct
       if (guess.toLowerCase() === data.word.toLowerCase()) {
         play("success");
@@ -561,7 +577,7 @@ const PictureWordGame = ({ data, gameState, setGameState, onComplete }: any) => 
 
   const handleGuess = (e: React.ChangeEvent<HTMLInputElement>) => {
     const guess = e.target.value;
-    setGameState({ ...state, userGuess: guess });
+    setGameState({ ...state, userGuess: guess, attempts: state.attempts + 1 });
 
     if (guess.toLowerCase() === data.correctWord.toLowerCase()) {
       onComplete(100);
