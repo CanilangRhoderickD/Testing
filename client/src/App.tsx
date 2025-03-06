@@ -1,4 +1,3 @@
-
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -10,8 +9,12 @@ import AuthPage from "@/pages/auth-page";
 import AdminDashboard from "@/pages/admin/dashboard";
 import FireSafetyGame from "@/pages/game/fire-safety";
 import Dashboard from "@/pages/dashboard";
+import GameContentGuide from "@/pages/admin/guide";
 import { ProtectedRoute } from "./lib/protected-route";
 import Navbar from "./components/layout/navbar";
+import AdminGameTemplate from "@/pages/admin/game-template"; // Added component
+import AdminFormatGuide from "@/pages/admin/format-guide"; // Added component
+
 
 function Router() {
   return (
@@ -26,6 +29,9 @@ function Router() {
         <Route path="/admin">
           <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly={true} />
         </Route>
+        <Route path="/admin/guide" component={GameContentGuide} />
+        <Route path="/admin/template" component={AdminGameTemplate} /> {/* Added route */}
+        <Route path="/admin/format-guide" component={AdminFormatGuide} /> {/* Added route */}
         <Route path="/dashboard">
           <ProtectedRoute path="/dashboard" component={Dashboard} />
         </Route>

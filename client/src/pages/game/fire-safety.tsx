@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GameModule } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -76,6 +76,28 @@ export default function FireSafetyGame() {
 
   const renderQuizContent = (data: any) => {
     const state = gameState.quiz || { currentQuestion: 0, score: 0 };
+
+    // Check if data has the expected structure, if not, show a friendly error
+    if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+      return (
+        <div className="space-y-6 text-center">
+          <p className="text-red-500">This quiz content is not properly formatted.</p>
+          <p>Required format: JSON with a 'questions' array containing question objects.</p>
+          <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto max-h-60">
+            {JSON.stringify({
+              questions: [
+                {
+                  question: "Sample question?",
+                  options: ["Option A", "Option B", "Option C", "Option D"],
+                  correctAnswer: 0
+                }
+              ]
+            }, null, 2)}
+          </pre>
+        </div>
+      );
+    }
+
     const question = data.questions[state.currentQuestion];
 
     return (
@@ -85,16 +107,20 @@ export default function FireSafetyGame() {
         />
         <h3 className="text-xl font-semibold mb-4">{question.question}</h3>
         <div className="grid gap-4">
-          {question.options.map((option: string, index: number) => (
-            <Button
-              key={index}
-              variant="outline"
-              className="justify-start h-auto py-4 px-6"
-              onClick={() => handleQuizAnswer(index)}
-            >
-              {option}
-            </Button>
-          ))}
+          {question.options && Array.isArray(question.options) ? (
+            question.options.map((option: string, index: number) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="justify-start h-auto py-4 px-6"
+                onClick={() => handleQuizAnswer(index)}
+              >
+                {option}
+              </Button>
+            ))
+          ) : (
+            <p className="text-yellow-500">No options available for this question</p>
+          )}
         </div>
       </div>
     );
@@ -187,22 +213,65 @@ export default function FireSafetyGame() {
       scrambledWord: scrambleWord(data.word)
     };
 
+    const handleScrambleGuess = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const guess = e.target.value.toUpperCase();
+      setGameState(prev => ({
+        ...prev,
+        wordScramble: {
+          ...prev.wordScramble!,
+          userGuess: guess
+        }
+      }));
+    };
+
+    const handleScrambleSubmit = () => {
+      const guess = state.userGuess;
+      if (!selectedModule) return;
+      if (guess.toLowerCase() === selectedModule.content.data.word.toLowerCase()) {
+        play("correct");
+        submitProgress(selectedModule.id, 100);
+        setSelectedModule(null);
+        setGameState({});
+      } else if (guess.length === selectedModule.content.data.word.length) {
+        play("wrong");
+      }
+    };
+
     return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <h3 className="text-2xl font-bold mb-2">{state.scrambledWord}</h3>
-          <p className="text-sm text-muted-foreground">Category: {data.category}</p>
-        </div>
-        <div className="space-y-4">
-          <Input
-            value={state.userGuess}
-            onChange={(e) => handleWordScrambleGuess(e.target.value)}
-            placeholder="Unscramble the word"
-            className="text-center text-xl"
-          />
-          <p className="text-sm text-center">{data.hint}</p>
-        </div>
-      </div>
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Word Scramble</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-2">
+              <span className="font-semibold">Category:</span> {selectedModule.content.data.category || "Fire Safety"}
+            </p>
+            <div className="bg-amber-100 rounded-lg p-4 mb-4">
+              <p className="text-3xl font-bold tracking-widest text-amber-800">
+                {state.scrambledWord || ""}
+              </p>
+            </div>
+            <p className="text-muted-foreground mt-4">
+              <span className="font-semibold">Hint:</span> {selectedModule.content.data.hint || ""}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Input 
+              value={state.userGuess || ""}
+              onChange={handleScrambleGuess}
+              placeholder="Type your answer"
+              className="uppercase"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleScrambleSubmit();
+                }
+              }}
+            />
+            <Button onClick={handleScrambleSubmit}>Submit</Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -275,22 +344,6 @@ export default function FireSafetyGame() {
     }
   };
 
-  const handleWordScrambleGuess = (guess: string) => {
-    if (!selectedModule) return;
-    setGameState({
-      ...gameState,
-      wordScramble: { ...gameState.wordScramble!, userGuess: guess }
-    });
-
-    if (guess.toLowerCase() === selectedModule.content.data.word.toLowerCase()) {
-      play("correct");
-      submitProgress(selectedModule.id, 100);
-      setSelectedModule(null);
-      setGameState({});
-    } else if (guess.length === selectedModule.content.data.word.length) {
-      play("wrong");
-    }
-  };
 
   const scrambleWord = (word: string) => {
     return word

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,13 +14,76 @@ import { GameModule } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Define game type templates
+const gameTypes = {
+  quiz: {
+    label: "Quiz",
+    template: {
+      questions: [
+        {
+          question: "Sample question?",
+          options: ["Option A", "Option B", "Option C", "Option D"],
+          correctAnswer: 0
+        }
+      ]
+    }
+  },
+  crossword: {
+    label: "Crossword",
+    template: {
+      grid: [
+        ["*", "*", "*", "*", "*"],
+        ["*", "", "", "", "*"],
+        ["*", "", "*", "", "*"],
+        ["*", "", "", "", "*"],
+        ["*", "*", "*", "*", "*"]
+      ],
+      words: ["fire", "safe"],
+      clues: ["What to avoid", "How to be"]
+    }
+  },
+  pictureWord: {
+    label: "Picture Word",
+    template: {
+      images: ["/images/image1.jpg", "/images/image2.jpg"],
+      correctWord: "SAFETY",
+      hints: ["Equipment that helps in emergencies"]
+    }
+  },
+  wordScramble: {
+    label: "Word Scramble",
+    template: {
+      word: "ESCAPE",
+      hint: "What you need to do in case of fire",
+      category: "Safety Actions"
+    }
+  },
+  tutorial: {
+    label: "Tutorial",
+    template: {
+      sections: [
+        {
+          title: "Introduction",
+          content: "This is the introduction to fire safety.",
+          type: "introduction"
+        }
+      ]
+    }
+  }
+};
+
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState<GameModule | null>(null);
   const [selectedType, setSelectedType] = useState<string>("quiz");
-  const toast = useToast();
+  const [moduleToDelete, setModuleToDelete] = useState<GameModule | null>(null);
+  const [currentContentTemplate, setCurrentContentTemplate] = useState("");
+  const [formData, setFormData] = useState({}); // Added formData state
+
 
   const { data: modules, isLoading } = useQuery<GameModule[]>({
     queryKey: ["/api/modules"],
@@ -28,7 +91,6 @@ export default function AdminDashboard() {
 
   const createModuleMutation = useMutation({
     mutationFn: async (formData: any) => {
-      const parsedContent = JSON.parse(formData.content);
       const payload = {
         title: formData.title,
         description: formData.description,
@@ -36,7 +98,7 @@ export default function AdminDashboard() {
         difficulty: formData.difficulty,
         content: {
           type: formData.type,
-          data: parsedContent
+          data: formData.content
         }
       };
       return apiRequest("POST", "/api/modules", payload);
@@ -50,24 +112,38 @@ export default function AdminDashboard() {
 
   const updateModuleMutation = useMutation({
     mutationFn: async (formData: any) => {
-      const parsedContent = JSON.parse(formData.content);
-      const payload = {
-        id: formData.id,
-        title: formData.title,
-        description: formData.description,
-        ageGroup: formData.ageGroup,
-        difficulty: formData.difficulty,
-        content: {
-          type: formData.type,
-          data: parsedContent
-        }
-      };
-      return apiRequest("PUT", `/api/modules/${formData.id}`, payload);
+      if (!selectedModule) return null;
+
+      let parsedContent;
+      try {
+        parsedContent = typeof formData.content === 'string'
+          ? JSON.parse(formData.content)
+          : formData.content;
+
+        const payload = {
+          title: formData.title,
+          description: formData.description,
+          ageGroup: formData.ageGroup,
+          difficulty: formData.difficulty,
+          content: {
+            type: formData.type || selectedModule.content.type,
+            data: parsedContent
+          }
+        };
+        return apiRequest("PUT", `/api/modules/${selectedModule.id}`, payload);
+      } catch (error) {
+        console.error("JSON parsing error:", error);
+        throw new Error("Invalid JSON format in content field. Please check the format and try again.");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
       setEditDialogOpen(false);
       toast.success("Module updated successfully!");
+    },
+    onError: (error: any) => {
+      console.error("Update error:", error);
+      toast.error(error?.message || "Failed to update module. Please check your input.");
     }
   });
 
@@ -75,79 +151,30 @@ export default function AdminDashboard() {
     mutationFn: async (id: string) => apiRequest("DELETE", `/api/modules/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
-      toast.success("Module deleted successfully!");
+      setDeleteDialogOpen(false);
+      toast({ title: "Success", description: "Module deleted successfully!" });
     },
     onError: (err) => {
-      toast.error("Failed to delete module: " + err.message);
+      toast({ title: "Error", description: "Failed to delete module: " + err.message, variant: "destructive" });
     }
   });
 
-  const gameTypes = {
-    quiz: {
-      label: "Quiz",
-      template: {
-        questions: [
-          {
-            question: "Sample question?",
-            options: ["Option A", "Option B", "Option C", "Option D"],
-            correctAnswer: 0
-          }
-        ]
-      }
-    },
-    crossword: {
-      label: "Crossword",
-      template: {
-        grid: [
-          ["*", "*", "*", "*", "*"],
-          ["*", "", "", "", "*"],
-          ["*", "", "*", "", "*"],
-          ["*", "", "", "", "*"],
-          ["*", "*", "*", "*", "*"]
-        ],
-        words: ["fire", "safe"],
-        clues: ["What to avoid", "How to be"]
-      }
-    },
-    pictureWord: {
-      label: "Picture Word",
-      template: {
-        images: ["/images/image1.jpg", "/images/image2.jpg"],
-        correctWord: "SAFETY",
-        hints: ["Equipment that helps in emergencies"]
-      }
-    },
-    wordScramble: {
-      label: "Word Scramble",
-      template: {
-        word: "ESCAPE",
-        hint: "What you need to do in case of fire",
-        category: "Safety Actions"
-      }
-    },
-    tutorial: {
-      label: "Tutorial",
-      template: {
-        sections: [
-          {
-            title: "Introduction",
-            content: "This is the introduction to fire safety.",
-            type: "introduction"
-          }
-        ]
-      }
-    }
-  };
 
   const handleEdit = (module: GameModule) => {
     setSelectedModule(module);
     setSelectedType(module.content.type);
+    setCurrentContentTemplate(JSON.stringify(module.content.data, null, 2));
     setEditDialogOpen(true);
   };
 
   const handleDelete = (module: GameModule) => {
-    if (confirm(`Are you sure you want to delete ${module.title}?`)) {
-      deleteModuleMutation.mutate(module.id);
+    setModuleToDelete(module);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (moduleToDelete) {
+      deleteModuleMutation.mutate(moduleToDelete.id);
     }
   };
 
@@ -155,33 +182,68 @@ export default function AdminDashboard() {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
 
-    const formData = {
-      title: form.title.value,
-      description: form.description.value,
-      ageGroup: form.ageGroup.value,
-      difficulty: form.difficulty.value,
-      type: selectedType,
-      content: form.content.value
-    };
+    try {
+      let parsedContent = {};
+      try {
+        parsedContent = JSON.parse(form.content.value);
+      } catch (parseError) {
+        console.error("Error parsing JSON:", parseError);
+        toast.error("Invalid JSON format. Please check your content template.");
+        return;
+      }
 
-    createModuleMutation.mutate(formData);
+      const formData = {
+        title: form.title.value,
+        description: form.description.value,
+        ageGroup: form.ageGroup.value,
+        difficulty: form.difficulty.value,
+        type: selectedType,
+        content: parsedContent
+      };
+
+      createModuleMutation.mutate(formData);
+    } catch (error) {
+      toast.error("Failed to create module. Please try again.");
+      console.error("Error creating module:", error);
+    }
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
 
-    const formData = {
-      id: selectedModule?.id,
-      title: form.title.value,
-      description: form.description.value,
-      ageGroup: form.ageGroup.value,
-      difficulty: form.difficulty.value,
-      type: selectedType,
-      content: form.content.value
-    };
+    try {
+      // Validate content as JSON if it's a string
+      let contentData;
+      try {
+        contentData = JSON.parse(data.content as string);
 
-    updateModuleMutation.mutate(formData);
+        // Basic validation for word scramble
+        if (selectedType === "wordScramble" &&
+            (!contentData.word || typeof contentData.word !== "string")) {
+          toast({
+            title: "Error",
+            description: "Word Scramble content must include a 'word' field.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to parse content JSON. Please check the format.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      updateModuleMutation.mutate(data);
+    } catch (error) {
+      toast.error("Failed to parse content JSON. Please check the format.");
+      console.error("Error parsing content:", error);
+    }
   };
 
   if (!user?.isAdmin) {
@@ -244,7 +306,14 @@ export default function AdminDashboard() {
                 <Label htmlFor="type">Game Type</Label>
                 <Select
                   value={selectedType}
-                  onValueChange={setSelectedType}
+                  onValueChange={(value) => {
+                    setSelectedType(value);
+                    setCurrentContentTemplate(JSON.stringify(
+                      gameTypes[value as keyof typeof gameTypes].template,
+                      null,
+                      2
+                    ));
+                  }}
                   name="type"
                 >
                   <SelectTrigger>
@@ -262,23 +331,66 @@ export default function AdminDashboard() {
 
               <div className="space-y-2">
                 <Label htmlFor="content">Game Content (JSON format)</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <button
+                    type="button"
+                    className="text-sm px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                    onClick={() => {
+                      // Fill template based on selected type
+                      if (selectedType) {
+                        const template = gameTypes[selectedType as keyof typeof gameTypes]?.template;
+                        if (template) {
+                          const textarea = document.getElementById('content') as HTMLTextAreaElement;
+                          if (textarea) {
+                            textarea.value = JSON.stringify(template, null, 2);
+                          }
+                        }
+                      }
+                    }}
+                  >
+                    Fill Template
+                  </button>
+                  <a
+                    href="/admin/guide"
+                    target="_blank"
+                    className="text-sm text-blue-500 hover:underline cursor-pointer"
+                  >
+                    View Format Guide
+                  </a>
+                </div>
                 <Textarea
                   id="content"
                   name="content"
                   placeholder={`Example: ${JSON.stringify(
-                    gameTypes[selectedType as keyof typeof gameTypes].template,
+                    selectedType && gameTypes[selectedType as keyof typeof gameTypes]?.template || {},
                     null,
                     2
                   )}`}
                   className="font-mono"
                   rows={10}
                   required
-                  defaultValue={JSON.stringify(
-                    gameTypes[selectedType as keyof typeof gameTypes].template,
-                    null,
-                    2
-                  )}
                 />
+                
+                {selectedType && (
+                  <div className="mt-2 p-3 bg-gray-100 rounded-md text-sm">
+                    <h4 className="font-semibold mb-1">Format Guide for {gameTypes[selectedType as keyof typeof gameTypes]?.label}</h4>
+                    {selectedType === "quiz" && (
+                      <p>Include an array of questions, each with options and correctAnswer index (0-based).</p>
+                    )}
+                    {selectedType === "crossword" && (
+                      <p>Define a grid with letters and empty spaces, along with clues for across and down words.</p>
+                    )}
+                    {selectedType === "pictureWord" && (
+                      <p>Provide an array of image paths, the correct word to spell, and optional hints.</p>
+                    )}
+                    {selectedType === "wordScramble" && (
+                      <p>Include the word to scramble, a hint for players, and category for the word.</p>
+                    )}
+                    {selectedType === "tutorial" && (
+                      <p>Create sections with titles, content text, and optional type identifiers.</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <Button
@@ -352,7 +464,10 @@ export default function AdminDashboard() {
                 <Label htmlFor="type">Game Type</Label>
                 <Select
                   value={selectedType}
-                  onValueChange={setSelectedType}
+                  onValueChange={(value) => {
+                    setSelectedType(value);
+                    setCurrentContentTemplate(JSON.stringify(gameTypes[value as keyof typeof gameTypes].template, null, 2));
+                  }}
                   name="type"
                 >
                   <SelectTrigger>
@@ -368,21 +483,55 @@ export default function AdminDashboard() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="flex justify-between items-center">
                 <Label htmlFor="content">Game Content (JSON format)</Label>
-                <Textarea
-                  id="content"
-                  name="content"
-                  className="font-mono"
-                  rows={10}
-                  required
-                  defaultValue={JSON.stringify(
-                    selectedModule.content.data,
-                    null,
-                    2
-                  )}
-                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="text-sm text-blue-500 hover:underline cursor-pointer"
+                    onClick={() => {
+                      // Fill template based on selected type
+                      if (selectedType) {
+                        const template = gameTypes[selectedType as keyof typeof gameTypes]?.template;
+                        if (template) {
+                          // Set template and update content
+                          setCurrentContentTemplate(JSON.stringify(template, null, 2));
+
+                          // Also update the form data
+                          setFormData(prev => ({
+                            ...prev,
+                            content: {
+                              type: selectedType,
+                              data: template
+                            }
+                          }));
+                        }
+                      }
+                    }}
+                  >
+                    Fill Template
+                  </button>
+                  <a
+                    className="text-sm text-blue-500 hover:underline cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = '/admin/guide';
+                    }}
+                  >
+                    View Format Guide
+                  </a>
+                </div>
               </div>
+              <Textarea
+                id="content"
+                name="content"
+                placeholder="Enter game content in JSON format"
+                className="font-mono"
+                rows={10}
+                required
+                value={currentContentTemplate}
+                onChange={(e) => setCurrentContentTemplate(e.target.value)}
+              />
 
               <Button
                 type="submit"
@@ -466,6 +615,33 @@ export default function AdminDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Are you sure you want to delete "{moduleToDelete?.title}"?</p>
+            <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteModuleMutation.isPending}
+            >
+              {deleteModuleMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
