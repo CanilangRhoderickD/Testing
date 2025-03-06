@@ -165,6 +165,8 @@ export default function FireSafetyGame() {
     const handleScrambleGuess = (e: React.ChangeEvent<HTMLInputElement>) => {
       const guess = e.target.value.toUpperCase();
       const isCorrect = guess.toLowerCase() === data.word.toLowerCase();
+      
+      console.log(`Current guess: ${guess}, Expected word: ${data.word}, isCorrect: ${isCorrect}`);
 
       setGameState(prev => ({
         ...prev,
@@ -177,6 +179,7 @@ export default function FireSafetyGame() {
 
       // Check if the guess is correct
       if (isCorrect) {
+        console.log("Word Scramble - Correct answer!");
         play("success");
         submitProgress(selectedModule!.id, 100);
       }
@@ -199,7 +202,6 @@ export default function FireSafetyGame() {
             onChange={handleScrambleGuess}
             placeholder="Enter your guess"
             className="text-center text-xl"
-            maxLength={data.word.length} 
           />
           {state.isCorrect && (
             <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
@@ -591,8 +593,12 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
     const guess = e.target.value.toUpperCase();
     setGameState({ ...state, userGuess: guess });
 
+    // Log for debugging
+    console.log(`Current guess: ${guess}, Expected word: ${data.word}`);
+    
     // Check if the guess matches the word (case insensitive)
     if (guess.toLowerCase() === data.word.toLowerCase()) {
+      console.log("Match found!");
       setGameState({...state, isCorrect: true});
       onComplete(100);
     }
@@ -615,7 +621,6 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
           onChange={handleInputChange}
           placeholder="Enter your guess"
           className="text-center text-xl"
-          maxLength={data.word.length} 
         />
         {state.isCorrect && (
           <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
