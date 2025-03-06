@@ -1,267 +1,491 @@
 import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
-import { GameModule } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { GameModule, GameType } from "@shared/schema";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea"; // Added from original
 
-// Define game type templates with multiple instances support
+
+// Define game types
 const gameTypes = {
   quiz: {
     label: "Quiz",
-    template: {
-      type: "quiz",
-      data: {
-        questions: [
-          {
-            question: "Sample question?",
-            options: ["Option A", "Option B", "Option C", "Option D"],
-            correctAnswer: 0
-          }
-        ]
-      }
-    },
-    multipleInstancesTemplate: {
-      type: "quiz",
-      instances: [
+    description: "Multiple choice questions to test knowledge",
+    defaultContent: JSON.stringify({
+      questions: [
         {
-          questions: []
+          question: "What should you do if your clothes catch fire?",
+          options: ["Run", "Stop, drop, and roll", "Jump in water", "Call for help"],
+          correctAnswer: 1
         }
       ]
-    }
-  },
-  tutorial: {
-    label: "Tutorial",
-    template: {
-      type: "tutorial",
-      data: {
-        sections: []
-      }
-    },
-    multipleInstancesTemplate: {
-      type: "tutorial",
-      instances: [
-        {
-          sections: []
-        }
-      ]
-    }
-  },
-  wordScramble: {
-    label: "Word Scramble",
-    template: {
-      type: "wordScramble",
-      data: {
-        word: "",
-        hint: "",
-        category: ""
-      }
-    },
-    multipleInstancesTemplate: {
-      type: "wordScramble",
-      instances: [
-        {
-          word: "",
-          hint: "",
-          category: ""
-        }
-      ]
-    }
+    }, null, 2)
   },
   pictureWord: {
     label: "Picture Word",
-    template: {
-      type: "pictureWord",
-      data: {
-        images: [],
-        correctWord: "",
-        hints: []
-      }
-    },
-    multipleInstancesTemplate: {
-      type: "pictureWord",
-      instances: [
-        {
-          images: [],
-          correctWord: "",
-          hints: []
-        }
-      ]
-    }
+    description: "Identify the word from multiple images",
+    defaultContent: JSON.stringify({
+      images: [
+        "/images/extinguisher.jpg",
+        "/images/smoke-detector.jpg",
+        "/images/fire-blanket.jpg",
+        "/images/exit-sign.jpg"
+      ],
+      correctWord: "SAFETY",
+      hints: ["Equipment that helps in emergencies"]
+    }, null, 2)
   },
-  crossword: {
-    label: "Crossword",
-    template: {
-      type: "crossword",
-      data: {
-        grid: [],
-        clues: {
-          across: [],
-          down: []
-        }
-      }
-    },
-    multipleInstancesTemplate: {
-      type: "crossword",
-      instances: [
-        {
-          grid: [],
-          clues: {
-            across: [],
-            down: []
-          }
-        }
-      ]
-    }
+  wordScramble: {
+    label: "Word Scramble",
+    description: "Unscramble the word related to fire safety",
+    defaultContent: JSON.stringify({
+      word: "ESCAPE",
+      hint: "What you need to do in case of fire",
+      category: "Safety Actions"
+    }, null, 2)
   },
-  quiz2: { // Added a second quiz entry to demonstrate the fix.  Remove this if only one quiz is intended.
-    label: "Quiz",
-    template: {
-      type: "quiz",
-      data: {
-        questions: []
-      }
-    },
-    multipleInstancesTemplate: {
-      type: "quiz",
-      instances: [
+  tutorial: {
+    label: "Tutorial",
+    description: "Interactive learning content with guidance",
+    defaultContent: JSON.stringify({
+      sections: [
         {
-          questions: []
+          title: "Welcome to Fire Safety",
+          content: "This tutorial will teach you about fire safety basics.",
+          type: "introduction"
+        },
+        {
+          title: "Navigation Guide",
+          content: "Learn how to use the platform's features.",
+          type: "walkthrough",
+          steps: [
+            {
+              title: "Your Dashboard",
+              description: "View your progress and achievements here.",
+              target: ".dashboard-stats"
+            }
+          ]
         }
       ]
-    }
+    }, null, 2)
+  }
+};
+const gameTypes = {
+  quiz: { 
+    label: "Quiz Game",
+    description: "Multiple-choice questions with correct answers",
+    fields: ["question", "options", "correctAnswer"]
+  },
+  memory: { 
+    label: "Memory Match",
+    description: "Matching pairs of cards with fire safety concepts",
+    fields: ["pairs"]
+  },
+  sorting: { 
+    label: "Sorting Game",
+    description: "Sort items into correct categories",
+    fields: ["categories", "items"]
+  },
+  simulation: { 
+    label: "Emergency Simulation",
+    description: "Interactive scenario with decision points",
+    fields: ["scenario", "decisions", "outcomes"]
   }
 };
 
-
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [modules, setModules] = useState<GameModule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<GameType | "">("");
   const [selectedModule, setSelectedModule] = useState<GameModule | null>(null);
-  const [selectedType, setSelectedType] = useState<string>("quiz");
-  const [moduleToDelete, setModuleToDelete] = useState<GameModule | null>(null);
-
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [useMultipleInstances, setUseMultipleInstances] = useState(false);
 
+  const [newModule, setNewModule] = useState<Partial<GameModule>>({
+    title: "",
+    description: "",
+    content: {
+      type: "" as GameType,
+      data: {}
+    },
+    settings: {
+      timeLimit: 0,
+      difficulty: "medium",
+      allowMultipleInstances: false
+    }
+  });
+
+  // Load modules from API
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const response = await fetch("/api/modules");
+        const data = await response.json();
+        if (response.ok) {
+          setModules(data);
+        } else {
+          console.error("Error fetching modules:", data);
+          toast.error("Failed to load game modules");
+        }
+      } catch (error) {
+        console.error("API error:", error);
+        toast.error("Network error while loading modules");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchModules();
+  }, []);
+
+  // Reset form when dialog is opened/closed
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setNewModule({
+        title: "",
+        description: "",
+        content: {
+          type: "" as GameType,
+          data: {}
+        },
+        settings: {
+          timeLimit: 0,
+          difficulty: "medium",
+          allowMultipleInstances: false
+        }
+      });
+      setSelectedModule(null);
+      setSelectedType("");
+      setUseMultipleInstances(false);
+    } else if (selectedModule) {
+      setNewModule({
+        ...selectedModule
+      });
+      setUseMultipleInstances(selectedModule.settings?.allowMultipleInstances || false);
+    }
+  }, [isDialogOpen, selectedModule]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newModule.title || !newModule.content?.type) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Prepare the data
+      const moduleData = {
+        ...newModule,
+        settings: {
+          ...newModule.settings,
+          allowMultipleInstances: useMultipleInstances
+        }
+      };
+
+      // Determine if this is an edit or a new module
+      const method = selectedModule ? "PUT" : "POST";
+      const url = selectedModule 
+        ? `/api/modules/${selectedModule.id}` 
+        : "/api/modules";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(moduleData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(selectedModule ? "Module updated successfully" : "Module created successfully");
+
+        // Update the local state
+        if (selectedModule) {
+          setModules(modules.map(mod => 
+            mod.id === selectedModule.id ? data : mod
+          ));
+        } else {
+          setModules([...modules, data]);
+        }
+
+        setIsDialogOpen(false);
+      } else {
+        console.error("API error:", data);
+        toast.error(selectedModule ? "Failed to update module" : "Failed to create module");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGameTypeChange = (value: string) => {
-    const selectedType = value as keyof typeof gameTypes;
+    setSelectedType(value as GameType);
     setNewModule({
-      ...newModule, 
-      content: useMultipleInstances 
-        ? gameTypes[selectedType]?.multipleInstancesTemplate || {} 
-        : gameTypes[selectedType]?.template || {}
+      ...newModule,
+      content: {
+        type: value as GameType,
+        data: {}
+      }
     });
   };
 
-  const toggleMultipleInstances = () => {
-    const newValue = !useMultipleInstances;
-    setUseMultipleInstances(newValue);
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
 
-    // Update content structure based on multiple instances setting
-    if (newModule.content.type && gameTypes[newModule.content.type as keyof typeof gameTypes]) {
+    if (name.startsWith("content.")) {
+      // Handle content.data fields
+      const field = name.split(".")[1];
       setNewModule({
         ...newModule,
-        content: newValue 
-          ? gameTypes[newModule.content.type as keyof typeof gameTypes].multipleInstancesTemplate 
-          : gameTypes[newModule.content.type as keyof typeof gameTypes].template
+        content: {
+          ...newModule.content,
+          data: {
+            ...newModule.content?.data,
+            [field]: value
+          }
+        }
+      });
+    } else if (name.startsWith("settings.")) {
+      // Handle settings fields
+      const field = name.split(".")[1];
+      setNewModule({
+        ...newModule,
+        settings: {
+          ...newModule.settings,
+          [field]: field === "timeLimit" ? parseInt(value) || 0 : value
+        }
+      });
+    } else {
+      // Handle top-level fields
+      setNewModule({
+        ...newModule,
+        [name]: value
       });
     }
   };
 
-  const [currentContentTemplate, setCurrentContentTemplate] = useState("");
-  const [formData, setFormData] = useState({}); // Added formData state
+  const handleDelete = async () => {
+    if (!selectedModule) return;
 
+    try {
+      setLoading(true);
 
-  const { data: modules, isLoading } = useQuery<GameModule[]>({
-    queryKey: ["/api/modules"],
-  });
+      const response = await fetch(`/api/modules/${selectedModule.id}`, {
+        method: "DELETE"
+      });
 
-  const createModuleMutation = useMutation({
-    mutationFn: async (formData: any) => {
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        ageGroup: formData.ageGroup,
-        difficulty: formData.difficulty,
-        content: {
-          type: formData.type,
-          data: formData.content
-        }
-      };
-      return apiRequest("POST", "/api/modules", payload);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
-      setCreateDialogOpen(false);
-      toast.success("Module created successfully!");
-    }
-  });
-
-  const updateModuleMutation = useMutation({
-    mutationFn: async (formData: any) => {
-      if (!selectedModule) return null;
-
-      let parsedContent;
-      try {
-        parsedContent = typeof formData.content === 'string'
-          ? JSON.parse(formData.content)
-          : formData.content;
-
-        const payload = {
-          title: formData.title,
-          description: formData.description,
-          ageGroup: formData.ageGroup,
-          difficulty: formData.difficulty,
-          content: {
-            type: formData.type || selectedModule.content.type,
-            data: parsedContent
-          }
-        };
-        return apiRequest("PUT", `/api/modules/${selectedModule.id}`, payload);
-      } catch (error) {
-        console.error("JSON parsing error:", error);
-        throw new Error("Invalid JSON format in content field. Please check the format and try again.");
+      if (response.ok) {
+        toast.success("Module deleted successfully");
+        setModules(modules.filter(mod => mod.id !== selectedModule.id));
+        setIsDeleteDialogOpen(false);
+      } else {
+        const data = await response.json();
+        console.error("API error:", data);
+        toast.error("Failed to delete module");
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
-      setEditDialogOpen(false);
-      toast.success("Module updated successfully!");
-    },
-    onError: (error: any) => {
-      console.error("Update error:", error);
-      toast.error(error?.message || "Failed to update module. Please check your input.");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setLoading(false);
     }
-  });
-
-  const deleteModuleMutation = useMutation({
-    mutationFn: async (id: string) => apiRequest("DELETE", `/api/modules/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/modules"] });
-      setDeleteDialogOpen(false);
-      toast({ title: "Success", description: "Module deleted successfully!" });
-    },
-    onError: (err) => {
-      toast({ title: "Error", description: "Failed to delete module: " + err.message, variant: "destructive" });
-    }
-  });
-
+  };
 
   const handleEdit = (module: GameModule) => {
     setSelectedModule(module);
     setSelectedType(module.content.type);
+    setUseMultipleInstances(module.settings?.allowMultipleInstances || false);
+    setIsDialogOpen(true);
+  };
+
+  const toggleMultipleInstances = () => {
+    setUseMultipleInstances(!useMultipleInstances);
+  };
+
+  const confirmDelete = (module: GameModule) => {
+    setSelectedModule(module);
+    setIsDeleteDialogOpen(true);
+  };
+
+  if (loading && modules.length === 0) {
+    return (
+      <div className="flex h-[400px] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Game Modules</CardTitle>
+        <Button onClick={() => setIsDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Add Module
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="all">
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">All Modules</TabsTrigger>
+            <TabsTrigger value="quiz">Quiz</TabsTrigger>
+            <TabsTrigger value="memory">Memory</TabsTrigger>
+            <TabsTrigger value="sorting">Sorting</TabsTrigger>
+            <TabsTrigger value="simulation">Simulation</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Difficulty</TableHead>
+                  <TableHead>Time Limit</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {modules.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      No modules found. Create one to get started.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  modules.map((module) => (
+                    <TableRow key={module.id}>
+                      <TableCell className="font-medium">{module.title}</TableCell>
+                      <TableCell>{gameTypes[module.content.type]?.label || module.content.type}</TableCell>
+                      <TableCell className="capitalize">{module.settings?.difficulty || "medium"}</TableCell>
+                      <TableCell>{module.settings?.timeLimit || "No limit"}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleEdit(module)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => confirmDelete(module)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TabsContent>
+
+          {/* Filter tabs for each game type */}
+          {Object.entries(gameTypes).map(([type, info]) => (
+            <TabsContent key={type} value={type} className="space-y-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Difficulty</TableHead>
+                    <TableHead>Time Limit</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modules.filter(m => m.content.type === type).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">
+                        No {info.label} modules found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    modules
+                      .filter(m => m.content.type === type)
+                      .map((module) => (
+                        <TableRow key={module.id}>
+                          <TableCell className="font-medium">{module.title}</TableCell>
+                          <TableCell className="capitalize">{module.settings?.difficulty || "medium"}</TableCell>
+                          <TableCell>{module.settings?.timeLimit || "No limit"}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleEdit(module)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => confirmDelete(module)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                  )}
+                </TableBody>
+              </Table>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </CardContent>
+
+      {/* Create/Edit Module Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedModule ? "Edit Game Module" : "Create New Game Module"}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedModule
+                ? "Update the details for this game module."
+                : "Fill in the details to create a new game module."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    value={newModule.title || ""}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
 
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="gameType">Game Type</Label>
@@ -279,501 +503,135 @@ export default function AdminDashboard() {
                     </SelectContent>
                   </Select>
                 </div>
-              
+
                 {/* End of first section */}
-                
+
                 <div className="space-y-2">
-                <div className="flex items-center space-x-2 mt-2">
+                  <div className="flex items-center space-x-2 mt-2">
                     <input 
-                    type="checkbox" 
-                    id="multipleInstances" 
-                    checked={useMultipleInstances}
-                    onChange={toggleMultipleInstances}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  <Label htmlFor="multipleInstances">Enable multiple game instances</Label>
-                </div>
-
-    setCurrentContentTemplate(JSON.stringify(module.content.data, null, 2));
-    setEditDialogOpen(true);
-  };
-
-  const handleDelete = (module: GameModule) => {
-    setModuleToDelete(module);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (moduleToDelete) {
-      deleteModuleMutation.mutate(moduleToDelete.id);
-    }
-  };
-
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-
-    try {
-      let parsedContent = {};
-      try {
-        parsedContent = JSON.parse(form.content.value);
-      } catch (parseError) {
-        console.error("Error parsing JSON:", parseError);
-        toast.error("Invalid JSON format. Please check your content template.");
-        return;
-      }
-
-      const formData = {
-        title: form.title.value,
-        description: form.description.value,
-        ageGroup: form.ageGroup.value,
-        difficulty: form.difficulty.value,
-        type: selectedType,
-        content: parsedContent
-      };
-
-      createModuleMutation.mutate(formData);
-    } catch (error) {
-      toast.error("Failed to create module. Please try again.");
-      console.error("Error creating module:", error);
-    }
-  };
-
-  const handleEditSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
-
-    try {
-      // Validate content as JSON if it's a string
-      let contentData;
-      try {
-        contentData = JSON.parse(data.content as string);
-
-        // Basic validation for word scramble
-        if (selectedType === "wordScramble" &&
-            (!contentData.word || typeof contentData.word !== "string")) {
-          toast({
-            title: "Error",
-            description: "Word Scramble content must include a 'word' field.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to parse content JSON. Please check the format.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      updateModuleMutation.mutate(data);
-    } catch (error) {
-      toast.error("Failed to parse content JSON. Please check the format.");
-      console.error("Error parsing content:", error);
-    }
-  };
-
-  if (!user?.isAdmin) {
-    return <div className="container py-8">Access denied. Admin privileges required.</div>;
-  }
-
-  return (
-    <div className="container py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Create New Module
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle>Create New Game Module</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" required />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ageGroup">Age Group</Label>
-                  <Select defaultValue="all" name="ageGroup">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select age group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Ages</SelectItem>
-                      <SelectItem value="kids">Kids</SelectItem>
-                      <SelectItem value="teens">Teens</SelectItem>
-                      <SelectItem value="adults">Adults</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="difficulty">Difficulty</Label>
-                  <Select defaultValue="beginner" name="difficulty">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select difficulty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="type">Game Type</Label>
-                <Select
-                  value={selectedType}
-                  onValueChange={(value) => {
-                    setSelectedType(value);
-                    setCurrentContentTemplate(JSON.stringify(
-                      gameTypes[value as keyof typeof gameTypes].template,
-                      null,
-                      2
-                    ));
-                  }}
-                  name="type"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select game type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(gameTypes).map(([key, { label }]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="content">Game Content (JSON format)</Label>
-                <div className="flex items-center justify-between mb-2">
-                  <button
-                    type="button"
-                    className="text-sm px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                    onClick={() => {
-                      // Fill template based on selected type
-                      if (selectedType) {
-                        const template = gameTypes[selectedType as keyof typeof gameTypes]?.template;
-                        if (template) {
-                          const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                          if (textarea) {
-                            textarea.value = JSON.stringify(template, null, 2);
-                          }
-                        }
-                      }
-                    }}
-                  >
-                    Fill Template
-                  </button>
-                  <a
-                    href="/admin/guide"
-                    target="_blank"
-                    className="text-sm text-blue-500 hover:underline cursor-pointer"
-                  >
-                    View Format Guide
-                  </a>
-                </div>
-                <Textarea
-                  id="content"
-                  name="content"
-                  placeholder={`Example: ${JSON.stringify(
-                    selectedType && gameTypes[selectedType as keyof typeof gameTypes]?.template || {},
-                    null,
-                    2
-                  )}`}
-                  className="font-mono"
-                  rows={10}
-                  required
-                />
-
-                {selectedType && (
-                  <div className="mt-2 p-3 bg-gray-100 rounded-md text-sm">
-                    <h4 className="font-semibold mb-1">Format Guide for {gameTypes[selectedType as keyof typeof gameTypes]?.label}</h4>
-                    {selectedType === "quiz" && (
-                      <p>Include an array of questions, each with options and correctAnswer index (0-based).</p>
-                    )}
-                    {selectedType === "crossword" && (
-                      <p>Define a grid with letters and empty spaces, along with clues for across and down words.</p>
-                    )}
-                    {selectedType === "pictureWord" && (
-                      <p>Provide an array of image paths, the correct word to spell, and optional hints.</p>
-                    )}
-                    {selectedType === "wordScramble" && (
-                      <p>Include the word to scramble, a hint for players, and category for the word.</p>
-                    )}
-                    {selectedType === "tutorial" && (
-                      <p>Create sections with titles, content text, and optional type identifiers.</p>
-                    )}
+                      type="checkbox" 
+                      id="multipleInstances" 
+                      checked={useMultipleInstances}
+                      onChange={toggleMultipleInstances}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <Label htmlFor="multipleInstances">Enable multiple game instances</Label>
                   </div>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={createModuleMutation.isPending}
-              >
-                {createModuleMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Create Game Module
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Edit Game Module</DialogTitle>
-          </DialogHeader>
-          {selectedModule && (
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  defaultValue={selectedModule.title}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  defaultValue={selectedModule.description}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ageGroup">Age Group</Label>
-                  <Select defaultValue={selectedModule.ageGroup} name="ageGroup">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select age group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Ages</SelectItem>
-                      <SelectItem value="kids">Kids</SelectItem>
-                      <SelectItem value="teens">Teens</SelectItem>
-                      <SelectItem value="adults">Adults</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="difficulty">Difficulty</Label>
-                  <Select defaultValue={selectedModule.difficulty} name="difficulty">
-                    <SelectTrigger>
+              </div>
+
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  name="description"
+                  value={newModule.description || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="settings.difficulty">Difficulty</Label>
+                  <Select 
+                    value={newModule.settings?.difficulty || "medium"} 
+                    onValueChange={(value) => 
+                      setNewModule({
+                        ...newModule,
+                        settings: {
+                          ...newModule.settings,
+                          difficulty: value
+                        }
+                      })
+                    }
+                  >
+                    <SelectTrigger id="settings.difficulty">
                       <SelectValue placeholder="Select difficulty" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="hard">Hard</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="type">Game Type</Label>
-                <Select
-                  value={selectedType}
-                  onValueChange={(value) => {
-                    setSelectedType(value);
-                    setCurrentContentTemplate(JSON.stringify(gameTypes[value as keyof typeof gameTypes].template, null, 2));
-                  }}
-                  name="type"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select game type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(gameTypes).map(([key, { label }]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div className="flex justify-between items-center">
-                <Label htmlFor="content">Game Content (JSON format)</Label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="text-sm text-blue-500 hover:underline cursor-pointer"
-                    onClick={() => {
-                      // Fill template based on selected type
-                      if (selectedType) {
-                        const template = gameTypes[selectedType as keyof typeof gameTypes]?.template;
-                        if (template) {
-                          // Set template and update content
-                          setCurrentContentTemplate(JSON.stringify(template, null, 2));
-
-                          // Also update the form data
-                          setFormData(prev => ({
-                            ...prev,
-                            content: {
-                              type: selectedType,
-                              data: template
-                            }
-                          }));
-                        }
-                      }
-                    }}
-                  >
-                    Fill Template
-                  </button>
-                  <a
-                    className="text-sm text-blue-500 hover:underline cursor-pointer"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.location.href = '/admin/guide';
-                    }}
-                  >
-                    View Format Guide
-                  </a>
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="settings.timeLimit">Time Limit (seconds)</Label>
+                  <Input
+                    id="settings.timeLimit"
+                    name="settings.timeLimit"
+                    type="number"
+                    min="0"
+                    value={newModule.settings?.timeLimit || 0}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
-              <Textarea
-                id="content"
-                name="content"
-                placeholder="Enter game content in JSON format"
-                className="font-mono"
-                rows={10}
-                required
-                value={currentContentTemplate}
-                onChange={(e) => setCurrentContentTemplate(e.target.value)}
-              />
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={updateModuleMutation.isPending}
-              >
-                {updateModuleMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Update Game Module
-              </Button>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+              {/* Dynamic fields based on selected game type */}
+              {selectedType && (
+                <div className="border rounded-md p-4 space-y-4">
+                  <h3 className="text-sm font-semibold">
+                    {gameTypes[selectedType as GameType]?.label} Configuration
+                  </h3>
 
-      <Tabs defaultValue="modules">
-        <TabsList>
-          <TabsTrigger value="modules">Game Modules</TabsTrigger>
-          <TabsTrigger value="stats">Statistics</TabsTrigger>
-        </TabsList>
-        <TabsContent value="modules" className="py-4">
-          {isLoading ? (
-            <div className="flex justify-center">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {modules?.map((module) => (
-                <Card key={module.id}>
-                  <CardHeader className="pb-2">
-                    <CardTitle>{module.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {module.description}
+                  <p className="text-sm text-muted-foreground">
+                    {gameTypes[selectedType as GameType]?.description}
+                  </p>
+
+                  {/* Currently placeholder - would be expanded with specific fields for each game type */}
+                  <div className="space-y-4">
+                    <p className="text-sm">
+                      More configuration options for this game type will be available soon.
                     </p>
-                    <div className="flex flex-col gap-2 mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Type: {gameTypes[module.content.type as keyof typeof gameTypes]?.label}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Age Group: {module.ageGroup}</span>
-                        <span className="text-sm">Difficulty: {module.difficulty}</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => handleEdit(module)}
-                      >
-                        <Pencil className="h-4 w-4 mr-2" /> Edit Module
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleDelete(module)}
-                        disabled={deleteModuleMutation.isPending}
-                      >
-                        {deleteModuleMutation.isPending && module.id === deleteModuleMutation.variables ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4 mr-2" />
-                        )}
-                        Delete Module
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-          </div>
-        </TabsContent>
-        <TabsContent value="stats" className="py-4">
-          <div className="border rounded-lg p-6">
-            <h3 className="text-lg font-medium mb-4">User Statistics</h3>
-            <p>Statistics dashboard coming soon.</p>
-          </div>
-        </TabsContent>
-      </Tabs>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p>Are you sure you want to delete "{moduleToDelete?.title}"?</p>
-            <p className="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={deleteModuleMutation.isPending}
-            >
-              {deleteModuleMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              Delete
-            </Button>
-          </div>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {selectedModule ? "Update Module" : "Create Module"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              &quot;{selectedModule?.title}&quot; module.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
   );
 }

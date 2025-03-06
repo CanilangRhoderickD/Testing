@@ -1,17 +1,25 @@
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/hooks/use-auth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSound } from "@/lib/use-sound";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { GameModule } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/api";
+import useSound from "@/hooks/use-sound";
+import { TutorialContent } from "@/components/game/tutorial-content";
+import { hasMultipleInstances, calculatePoints, formatTime, scrambleWord } from "@/lib/game-utils";
+
+interface GameModule {
+  id: number;
+  title: string;
+  description: string;
+  imageUrl: string;
+  content: any;
+  difficulty: string;
+  ageGroup: string;
+}
 
 interface GameState {
   crossword?: {
@@ -39,6 +47,7 @@ export default function FireSafetyGame() {
   const [gameState, setGameState] = useState<GameState>({});
   const [ageFilter, setAgeFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [currentInstanceIndex, setCurrentInstanceIndex] = useState(0);
 
   const { data: modules, isLoading } = useQuery<GameModule[]>({
     queryKey: ["/api/modules"],
@@ -55,203 +64,31 @@ export default function FireSafetyGame() {
     return ageMatch && difficultyMatch;
   });
 
-  const renderGameContent = () => {
-    if (!selectedModule) return null;
-    
-    // Handle multiple game instances if content has instances array
-    const hasMultipleInstances = selectedModule.content.instances && Array.isArray(selectedModule.content.instances);
+  // Check if the module has multiple instances
+  const hasMultipleInstances = selectedModule?.content?.instances && 
+    Array.isArray(selectedModule.content.instances) && 
+    selectedModule.content.instances.length > 0;
 
-    switch (selectedModule.content.type) {
-      case "quiz":
-        return renderQuizContent(selectedModule.content.data);
-      case "crossword":
-        return renderCrosswordContent(selectedModule.content.data);
-      case "pictureWord":
-        return renderPictureWordContent(selectedModule.content.data);
-      case "wordScramble":
-        return renderWordScrambleContent(selectedModule.content.data);
-      case "tutorial":
-        return renderTutorialContent(selectedModule.content.data);
-      default:
-        return <p>Unsupported game type</p>;
-    }
-  };
+  const handlePictureWordGuess = (guess: string) => {
+    if (!selectedModule) return;
 
+    const data = hasMultipleInstances 
+      ? selectedModule.content.instances[currentInstanceIndex] 
+      : selectedModule.content.data;
 
-    // Handle different game types with multiple instances
-    const [currentInstanceIndex, setCurrentInstanceIndex] = useState(0);
-    
-    // Function to render the appropriate game component based on content type and instance
-    const renderGameComponent = (content: any, instanceIndex?: number) => {
-      const idx = instanceIndex !== undefined ? instanceIndex : currentInstanceIndex;
-      const contentData = hasMultipleInstances 
-        ? selectedModule.content.instances[idx] 
-        : selectedModule.content.data;
-        
-      switch (selectedModule.content.type) {
-        case "wordScramble":
-          return (
-            <WordScrambleGame 
-              data={contentData} 
-              gameState={gameState.wordScramble} 
-              setGameState={(state) => setGameState({...gameState, wordScramble: state})}
-              onComplete={(score) => submitProgress(selectedModule.id, score)}
-            />
-          );
-        case "pictureWord":
-          return (
-            <PictureWordGame 
-              data={contentData} 
-              gameState={gameState.pictureWord}
-              setGameState={(state) => setGameState({...gameState, pictureWord: state})}
-              onComplete={(score) => submitProgress(selectedModule.id, score)}
-            />
-          );
-        case "tutorial":
-          return (
-            <TutorialContent 
-              data={contentData}
-              onComplete={() => submitProgress(selectedModule.id, 100)}
-            />
-          );
-        default:
-          return <div>Unknown game type</div>;
+    setGameState(prev => ({
+      ...prev,
+      pictureWord: {
+        userGuess: guess,
+        attempts: prev.pictureWord?.attempts || 0
       }
-    };
-    
-    // If module has multiple instances, show instance navigation
-    if (hasMultipleInstances) {
-      return (
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center mb-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentInstanceIndex(prev => Math.max(0, prev - 1))}
-              disabled={currentInstanceIndex === 0}
-            >
-              Previous
-            </Button>
-            <span className="text-sm font-medium">
-              Instance {currentInstanceIndex + 1} of {selectedModule.content.instances.length}
-            </span>
-            <Button 
-              variant="outline"
-              onClick={() => setCurrentInstanceIndex(prev => 
-                Math.min(selectedModule.content.instances.length - 1, prev + 1))}
-              disabled={currentInstanceIndex === selectedModule.content.instances.length - 1}
-            >
-              Next
-            </Button>
-          </div>
-          
-          {renderGameComponent(selectedModule.content, currentInstanceIndex)}
-        </div>
-      );
+    }));
+
+    // Check if correct on enter key
+    if (guess.toLowerCase() === data.correctWord.toLowerCase()) {
+      play("success");
+      submitProgress(selectedModule.id, 100);
     }
-    
-    // If single instance, render directly
-    return renderGameComponent(selectedModule.content);
-
-  const renderQuizContent = (data: any) => {
-    const state = gameState.quiz || { currentQuestion: 0, score: 0 };
-
-    // Check if data has the expected structure, if not, show a friendly error
-    if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
-      return (
-        <div className="space-y-6 text-center">
-          <p className="text-red-500">This quiz content is not properly formatted.</p>
-          <p>Required format: JSON with a 'questions' array containing question objects.</p>
-          <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto max-h-60">
-            {JSON.stringify({
-              questions: [
-                {
-                  question: "Sample question?",
-                  options: ["Option A", "Option B", "Option C", "Option D"],
-                  correctAnswer: 0
-                }
-              ]
-            }, null, 2)}
-          </pre>
-        </div>
-      );
-    }
-
-    const question = data.questions[state.currentQuestion];
-
-    return (
-      <div className="space-y-6">
-        <Progress
-          value={((state.currentQuestion + 1) / data.questions.length) * 100}
-        />
-        <h3 className="text-xl font-semibold mb-4">{question.question}</h3>
-        <div className="grid gap-4">
-          {question.options && Array.isArray(question.options) ? (
-            question.options.map((option: string, index: number) => (
-              <Button
-                key={index}
-                variant="outline"
-                className="justify-start h-auto py-4 px-6"
-                onClick={() => handleQuizAnswer(index)}
-              >
-                {option}
-              </Button>
-            ))
-          ) : (
-            <p className="text-yellow-500">No options available for this question</p>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderCrosswordContent = (data: any) => {
-    const state = gameState.crossword || {
-      selectedCell: null,
-      userAnswers: data.grid.map((row: any) => row.map(() => ""))
-    };
-
-    return (
-      <div className="space-y-6">
-        <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${data.grid[0].length}, 1fr)` }}>
-          {data.grid.map((row: string[], rowIndex: number) =>
-            row.map((cell: string, colIndex: number) => (
-              <Button
-                key={`${rowIndex}-${colIndex}`}
-                variant={cell === "#" ? "ghost" : "outline"}
-                className={`w-12 h-12 p-0 ${
-                  state.selectedCell?.row === rowIndex &&
-                  state.selectedCell?.col === colIndex
-                    ? "ring-2 ring-primary"
-                    : ""
-                }`}
-                disabled={cell === "#"}
-                onClick={() => handleCrosswordCellClick(rowIndex, colIndex)}
-              >
-                {state.userAnswers[rowIndex][colIndex]}
-              </Button>
-            ))
-          )}
-        </div>
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-semibold mb-2">Across</h4>
-            {data.clues.across.map((clue: any) => (
-              <p key={clue.number} className="text-sm">
-                {clue.number}. {clue.clue}
-              </p>
-            ))}
-          </div>
-          <div>
-            <h4 className="font-semibold mb-2">Down</h4>
-            {data.clues.down.map((clue: any) => (
-              <p key={clue.number} className="text-sm">
-                {clue.number}. {clue.clue}
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
   };
 
   const renderPictureWordContent = (data: any) => {
@@ -302,228 +139,347 @@ export default function FireSafetyGame() {
       }));
     };
 
-    const handleScrambleSubmit = () => {
-      const guess = state.userGuess;
-      if (!selectedModule) return;
-      if (guess.toLowerCase() === selectedModule.content.data.word.toLowerCase()) {
-        play("correct");
-        submitProgress(selectedModule.id, 100);
-        setSelectedModule(null);
-        setGameState({});
-      } else if (guess.length === selectedModule.content.data.word.length) {
-        play("wrong");
-      }
+    return (
+      <div className="space-y-6">
+        <div className="bg-muted p-6 rounded-lg">
+          <h2 className="text-center text-3xl font-bold tracking-widest">
+            {state.scrambledWord}
+          </h2>
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-center text-muted-foreground">
+            Unscramble the word above related to fire safety
+          </p>
+          <Input
+            value={state.userGuess}
+            onChange={handleScrambleGuess}
+            placeholder="Enter your guess"
+            className="text-center text-xl"
+            maxLength={state.scrambledWord.length}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderCrosswordContent = (data: any) => {
+    const state = gameState.crossword || {
+      selectedCell: null,
+      userAnswers: Array(data.grid.length).fill(null).map(() => 
+        Array(data.grid[0].length).fill("")
+      )
     };
 
     return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Word Scramble</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center">
-            <p className="text-muted-foreground mb-2">
-              <span className="font-semibold">Category:</span> {selectedModule.content.data.category || "Fire Safety"}
-            </p>
-            <div className="bg-amber-100 rounded-lg p-4 mb-4">
-              <p className="text-3xl font-bold tracking-widest text-amber-800">
-                {state.scrambledWord || ""}
-              </p>
+      <div className="space-y-6">
+        <div className="grid grid-flow-row gap-0.5">
+          {data.grid.map((row: string[], rowIndex: number) => (
+            <div key={rowIndex} className="flex gap-0.5">
+              {row.map((cell: string, colIndex: number) => (
+                <div 
+                  key={`${rowIndex}-${colIndex}`}
+                  className={`w-10 h-10 border flex items-center justify-center ${
+                    cell === "" ? "bg-gray-200" : "bg-white"
+                  }`}
+                >
+                  {cell !== "" && (
+                    <input 
+                      className="w-full h-full text-center uppercase font-bold"
+                      maxLength={1}
+                      value={state.userAnswers[rowIndex][colIndex]}
+                      onChange={(e) => {
+                        const newAnswers = [...state.userAnswers];
+                        newAnswers[rowIndex][colIndex] = e.target.value;
+                        setGameState({
+                          ...gameState,
+                          crossword: {
+                            ...state,
+                            userAnswers: newAnswers
+                          }
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
-            <p className="text-muted-foreground mt-4">
-              <span className="font-semibold">Hint:</span> {selectedModule.content.data.hint || ""}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Input 
-              value={state.userGuess || ""}
-              onChange={handleScrambleGuess}
-              placeholder="Type your answer"
-              className="uppercase"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleScrambleSubmit();
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderQuizContent = (data: any) => {
+    const state = gameState.quiz || { currentQuestion: 0, score: 0 };
+
+    // Check if data has the expected structure, if not, show a friendly error
+    if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+      return (
+        <div className="space-y-6 text-center">
+          <p className="text-red-500">This quiz content is not properly formatted.</p>
+          <p>Required format: JSON with a 'questions' array containing question objects.</p>
+          <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto max-h-60">
+            {JSON.stringify({
+              questions: [
+                {
+                  question: "Sample question?",
+                  options: ["Option A", "Option B", "Option C", "Option D"],
+                  correctAnswer: 0
                 }
-              }}
-            />
-            <Button onClick={handleScrambleSubmit}>Submit</Button>
+              ]
+            }, null, 2)}
+          </pre>
+        </div>
+      );
+    }
+
+    const question = data.questions[state.currentQuestion];
+
+    const handleAnswerSelection = (optionIndex: number) => {
+      if (!selectedModule) return;
+
+      const isCorrect = optionIndex === question.correctAnswer;
+
+      if (isCorrect) {
+        play("success");
+      } else {
+        play("error");
+      }
+
+      const newState = {
+        currentQuestion: state.currentQuestion + 1,
+        score: isCorrect ? state.score + 1 : state.score
+      };
+
+      setGameState({...gameState, quiz: newState});
+
+      // If last question, submit progress
+      if (state.currentQuestion === data.questions.length - 1) {
+        const finalScore = isCorrect ? (state.score + 1) / data.questions.length * 100 : state.score / data.questions.length * 100;
+        submitProgress(selectedModule.id, finalScore);
+      }
+    };
+
+    if (state.currentQuestion >= data.questions.length) {
+      const scorePercent = (state.score / data.questions.length) * 100;
+      return (
+        <div className="space-y-6 text-center py-8">
+          <h3 className="text-2xl font-bold">Quiz completed!</h3>
+          <p className="text-xl">Your score: {state.score} out of {data.questions.length}</p>
+          <div className="w-full bg-gray-200 rounded-full h-4">
+            <div className="bg-green-600 h-4 rounded-full" style={{ width: `${scorePercent}%` }}></div>
           </div>
-        </CardContent>
-      </Card>
+          <Button onClick={() => setGameState({...gameState, quiz: { currentQuestion: 0, score: 0 }})}>
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between text-sm text-muted-foreground">
+          <div>Question {state.currentQuestion + 1} of {data.questions.length}</div>
+          <div>Score: {state.score}</div>
+        </div>
+
+        <h3 className="text-xl font-medium">{question.question}</h3>
+
+        <div className="space-y-3">
+          {question.options.map((option: string, index: number) => (
+            <Button
+              key={index}
+              variant="outline"
+              className="w-full justify-start text-left h-auto py-3 px-4"
+              onClick={() => handleAnswerSelection(index)}
+            >
+              {option}
+            </Button>
+          ))}
+        </div>
+      </div>
     );
   };
 
   const renderTutorialContent = (data: any) => {
     return (
-      <div className="space-y-6">
-        {data.sections.map((section: any, index: number) => (
-          <div key={index}>
-            <h3 className="text-xl font-semibold mb-2">{section.title}</h3>
-            <p>{section.content}</p>
+      <TutorialContent 
+        data={data}
+        onComplete={() => submitProgress(selectedModule!.id, 100)}
+      />
+    );
+  };
+
+  // Function to render the appropriate game component based on content type and instance
+  const renderGameComponent = (content: any, instanceIndex?: number) => {
+    const idx = instanceIndex !== undefined ? instanceIndex : currentInstanceIndex;
+    const contentData = hasMultipleInstances 
+      ? selectedModule!.content.instances[idx] 
+      : selectedModule!.content.data;
+
+    switch (selectedModule!.content.type) {
+      case "wordScramble":
+        return (
+          <WordScrambleGame 
+            data={contentData} 
+            gameState={gameState.wordScramble} 
+            setGameState={(state) => setGameState({...gameState, wordScramble: state})}
+            onComplete={(score) => submitProgress(selectedModule!.id, score)}
+          />
+        );
+      case "pictureWord":
+        return (
+          <PictureWordGame 
+            data={contentData} 
+            gameState={gameState.pictureWord}
+            setGameState={(state) => setGameState({...gameState, pictureWord: state})}
+            onComplete={(score) => submitProgress(selectedModule!.id, score)}
+          />
+        );
+      case "quiz":
+        return (
+          <QuizGame 
+            data={contentData}
+            gameState={gameState.quiz}
+            setGameState={(state) => setGameState({...gameState, quiz: state})}
+            onComplete={(score) => submitProgress(selectedModule!.id, score)}
+          />
+        );
+      case "crossword":
+        return (
+          <CrosswordGame 
+            data={contentData}
+            gameState={gameState.crossword}
+            setGameState={(state) => setGameState({...gameState, crossword: state})}
+            onComplete={(score) => submitProgress(selectedModule!.id, score)}
+          />
+        );
+      case "tutorial":
+        return (
+          <TutorialContent 
+            data={contentData}
+            onComplete={() => submitProgress(selectedModule!.id, 100)}
+          />
+        );
+      default:
+        return <div>Unknown game type</div>;
+    }
+  };
+
+  // Render the game content within the dialog
+  const renderGameContent = () => {
+    if (!selectedModule) return null;
+
+    // If module has multiple instances, show instance navigation
+    if (hasMultipleInstances) {
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center mb-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentInstanceIndex(prev => Math.max(0, prev - 1))}
+              disabled={currentInstanceIndex === 0}
+            >
+              Previous
+            </Button>
+            <span className="text-sm font-medium">
+              Instance {currentInstanceIndex + 1} of {selectedModule.content.instances.length}
+            </span>
+            <Button 
+              variant="outline"
+              onClick={() => setCurrentInstanceIndex(prev => 
+                Math.min(selectedModule.content.instances.length - 1, prev + 1))}
+              disabled={currentInstanceIndex === selectedModule.content.instances.length - 1}
+            >
+              Next
+            </Button>
           </div>
-        ))}
-      </div>
-    );
-  };
 
-  // Game logic handlers
-  const handleQuizAnswer = (selectedOption: number) => {
-    if (!selectedModule) return;
-    const data = selectedModule.content.data;
-    const state = gameState.quiz || { currentQuestion: 0, score: 0 };
-
-    if (selectedOption === data.questions[state.currentQuestion].correctAnswer) {
-      play("correct");
-      state.score += 10;
-    } else {
-      play("wrong");
+          {renderGameComponent(selectedModule.content, currentInstanceIndex)}
+        </div>
+      );
     }
 
-    if (state.currentQuestion < data.questions.length - 1) {
-      setGameState({
-        ...gameState,
-        quiz: { ...state, currentQuestion: state.currentQuestion + 1 }
-      });
-    } else {
-      play("levelUp");
-      submitProgress(selectedModule.id, state.score);
-      setSelectedModule(null);
-      setGameState({});
-    }
+    // If single instance, render directly
+    return renderGameComponent(selectedModule.content);
   };
-
-  const handleCrosswordCellClick = (row: number, col: number) => {
-    play("click");
-    setGameState({
-      ...gameState,
-      crossword: {
-        ...gameState.crossword!,
-        selectedCell: { row, col }
-      }
-    });
-  };
-
-  const handlePictureWordGuess = (guess: string) => {
-    if (!selectedModule) return;
-    const state = gameState.pictureWord || { userGuess: "", attempts: 0 };
-
-    setGameState({
-      ...gameState,
-      pictureWord: { ...state, userGuess: guess, attempts: state.attempts + 1 }
-    });
-
-    if (guess.toLowerCase() === selectedModule.content.data.correctWord.toLowerCase()) {
-      play("correct");
-      submitProgress(selectedModule.id, Math.max(0, 100 - state.attempts * 10));
-      setSelectedModule(null);
-      setGameState({});
-    } else if (guess.length === selectedModule.content.data.correctWord.length) {
-      play("wrong");
-    }
-  };
-
-
-  const scrambleWord = (word: string) => {
-    return word
-      .split("")
-      .sort(() => Math.random() - 0.5)
-      .join("");
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Fire Safety Training</h1>
-        <p className="text-muted-foreground">
-          Complete modules to earn points and badges
-        </p>
-        <div className="mt-4">
-          <span className="font-semibold">Total Score: </span>
-          {user?.score}
+      <h1 className="text-2xl font-bold mb-6">Fire Safety Interactive Games</h1>
+
+      <div className="flex flex-wrap gap-3 mb-6">
+        <div>
+          <label className="text-sm font-medium">Age Group:</label>
+          <select 
+            value={ageFilter}
+            onChange={(e) => setAgeFilter(e.target.value)}
+            className="ml-2 border rounded p-1"
+          >
+            <option value="all">All Ages</option>
+            <option value="kids">Kids (5-8)</option>
+            <option value="preteens">Pre-teens (9-12)</option>
+            <option value="teens">Teens (13-17)</option>
+            <option value="adults">Adults (18+)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Difficulty:</label>
+          <select 
+            value={difficultyFilter}
+            onChange={(e) => setDifficultyFilter(e.target.value)}
+            className="ml-2 border rounded p-1"
+          >
+            <option value="all">All Levels</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
         </div>
       </div>
 
-      <div className="flex gap-4 mb-8">
-        <Select value={ageFilter} onValueChange={setAgeFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by age" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Ages</SelectItem>
-            <SelectItem value="kids">Kids (5-12)</SelectItem>
-            <SelectItem value="teens">Teens (13-17)</SelectItem>
-            <SelectItem value="adults">Adults (18+)</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by difficulty" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Difficulties</SelectItem>
-            <SelectItem value="beginner">Beginner</SelectItem>
-            <SelectItem value="intermediate">Intermediate</SelectItem>
-            <SelectItem value="advanced">Advanced</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AnimatePresence>
-          {filteredModules?.map((module) => (
-            <motion.div
-              key={module.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              onClick={() => {
-                play("click");
-                setSelectedModule(module);
-              }}
-            >
-              <Card
-                className={`cursor-pointer transition-transform hover:scale-105 ${
-                  user?.progress.completedModules.includes(module.id.toString())
-                    ? "bg-muted"
-                    : ""
-                }`}
-              >
-                <CardHeader>
-                  <CardTitle>{module.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {module.description}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Age: {module.ageGroup}</span>
-                      <span className="text-sm">Level: {module.difficulty}</span>
-                    </div>
-                    {user?.progress.completedModules.includes(
-                      module.id.toString()
-                    ) && (
-                      <div className="mt-2 text-sm font-medium text-green-600">
-                        Completed ✓
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+      {isLoading ? (
+        <div className="text-center py-10">Loading games...</div>
+      ) : filteredModules && filteredModules.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredModules.map((module) => (
+            <Card key={module.id} className="overflow-hidden h-full flex flex-col">
+              <div className="aspect-video bg-muted">
+                {module.imageUrl && (
+                  <img 
+                    src={module.imageUrl} 
+                    alt={module.title} 
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <CardContent className="p-4 flex-1 flex flex-col">
+                <div className="mb-2 flex gap-2">
+                  <Badge>{module.difficulty}</Badge>
+                  <Badge variant="outline">{module.ageGroup}</Badge>
+                </div>
+                <h3 className="text-lg font-bold mb-2">{module.title}</h3>
+                <p className="text-muted-foreground text-sm mb-4 flex-1">{module.description}</p>
+                <Button 
+                  onClick={() => {
+                    setSelectedModule(module);
+                    setGameState({});
+                    setCurrentInstanceIndex(0);
+                  }}
+                >
+                  Play Game
+                </Button>
+              </CardContent>
+            </Card>
           ))}
-        </AnimatePresence>
-      </div>
+        </div>
+      ) : (
+        <div className="text-center py-10">
+          No games found matching your filters.
+        </div>
+      )}
 
       <Dialog open={!!selectedModule} onOpenChange={() => {
         setSelectedModule(null);
@@ -539,3 +495,196 @@ export default function FireSafetyGame() {
     </div>
   );
 }
+
+// Game component types
+const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) => {
+  const state = gameState || { userGuess: "", scrambledWord: scrambleWord(data.word) };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const guess = e.target.value.toUpperCase();
+    setGameState({ ...state, userGuess: guess });
+
+    if (guess.toLowerCase() === data.word.toLowerCase()) {
+      onComplete(100);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-muted p-6 rounded-lg">
+        <h2 className="text-center text-3xl font-bold tracking-widest">
+          {state.scrambledWord}
+        </h2>
+      </div>
+
+      <div className="space-y-4">
+        <p className="text-center text-muted-foreground">
+          Unscramble the word above related to fire safety
+        </p>
+        <Input
+          value={state.userGuess}
+          onChange={handleInputChange}
+          placeholder="Enter your guess"
+          className="text-center text-xl"
+          maxLength={state.scrambledWord.length}
+        />
+      </div>
+    </div>
+  );
+};
+
+const PictureWordGame = ({ data, gameState, setGameState, onComplete }: any) => {
+  const state = gameState || { userGuess: "", attempts: 0 };
+
+  const handleGuess = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const guess = e.target.value;
+    setGameState({ ...state, userGuess: guess });
+
+    if (guess.toLowerCase() === data.correctWord.toLowerCase()) {
+      onComplete(100);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        {data.images.map((image: string, index: number) => (
+          <div key={index} className="aspect-square bg-muted rounded-lg">
+            <img
+              src={image}
+              alt={`Hint ${index + 1}`}
+              className="w-full h-full object-cover rounded-lg"
+            />
+          </div>
+        ))}
+      </div>
+      <div className="space-y-4">
+        <Input
+          value={state.userGuess}
+          onChange={handleGuess}
+          placeholder="What's the word?"
+          className="text-center text-xl"
+        />
+        <p className="text-sm text-center text-muted-foreground">
+          Attempts: {state.attempts}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const QuizGame = ({ data, gameState, setGameState, onComplete }: any) => {
+  const state = gameState || { currentQuestion: 0, score: 0 };
+
+  // Check if data has the expected structure
+  if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+    return (
+      <div className="space-y-6 text-center">
+        <p className="text-red-500">This quiz content is not properly formatted.</p>
+      </div>
+    );
+  }
+
+  const question = data.questions[state.currentQuestion];
+
+  const handleAnswerSelection = (optionIndex: number) => {
+    const isCorrect = optionIndex === question.correctAnswer;
+
+    const newState = {
+      currentQuestion: state.currentQuestion + 1,
+      score: isCorrect ? state.score + 1 : state.score
+    };
+
+    setGameState(newState);
+
+    // If last question, submit progress
+    if (state.currentQuestion === data.questions.length - 1) {
+      const finalScore = (newState.score / data.questions.length) * 100;
+      onComplete(finalScore);
+    }
+  };
+
+  if (state.currentQuestion >= data.questions.length) {
+    const scorePercent = (state.score / data.questions.length) * 100;
+    return (
+      <div className="space-y-6 text-center py-8">
+        <h3 className="text-2xl font-bold">Quiz completed!</h3>
+        <p className="text-xl">Your score: {state.score} out of {data.questions.length}</p>
+        <div className="w-full bg-gray-200 rounded-full h-4">
+          <div className="bg-green-600 h-4 rounded-full" style={{ width: `${scorePercent}%` }}></div>
+        </div>
+        <Button onClick={() => setGameState({ currentQuestion: 0, score: 0 })}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between text-sm text-muted-foreground">
+        <div>Question {state.currentQuestion + 1} of {data.questions.length}</div>
+        <div>Score: {state.score}</div>
+      </div>
+
+      <h3 className="text-xl font-medium">{question.question}</h3>
+
+      <div className="space-y-3">
+        {question.options.map((option: string, index: number) => (
+          <Button
+            key={index}
+            variant="outline"
+            className="w-full justify-start text-left h-auto py-3 px-4"
+            onClick={() => handleAnswerSelection(index)}
+          >
+            {option}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const CrosswordGame = ({ data, gameState, setGameState, onComplete }: any) => {
+  const state = gameState || {
+    selectedCell: null,
+    userAnswers: Array(data.grid.length).fill(null).map(() => 
+      Array(data.grid[0].length).fill("")
+    )
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-flow-row gap-0.5">
+        {data.grid.map((row: string[], rowIndex: number) => (
+          <div key={rowIndex} className="flex gap-0.5">
+            {row.map((cell: string, colIndex: number) => (
+              <div 
+                key={`${rowIndex}-${colIndex}`}
+                className={`w-10 h-10 border flex items-center justify-center ${
+                  cell === "" ? "bg-gray-200" : "bg-white"
+                }`}
+              >
+                {cell !== "" && (
+                  <input 
+                    className="w-full h-full text-center uppercase font-bold"
+                    maxLength={1}
+                    value={state.userAnswers[rowIndex][colIndex]}
+                    onChange={(e) => {
+                      const newAnswers = [...state.userAnswers];
+                      newAnswers[rowIndex][colIndex] = e.target.value;
+                      setGameState({
+                        ...state,
+                        userAnswers: newAnswers
+                      });
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
