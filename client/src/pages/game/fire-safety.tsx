@@ -95,7 +95,8 @@ export default function FireSafetyGame() {
   const renderPictureWordContent = (data: any) => {
     const state = gameState.pictureWord || { userGuess: "", attempts: 0, isCorrect: false };
 
-    const handlePictureWordGuess = (guess: string) => {
+    const handlePictureWordGuess = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const guess = e.target.value;
       const isCorrect = guess.toLowerCase() === data.correctWord.toLowerCase();
 
       setGameState(prev => ({
@@ -134,20 +135,21 @@ export default function FireSafetyGame() {
             </div>
             <Input
               value={state.userGuess}
-              onChange={(e) => handlePictureWordGuess(e.target.value)}
+              onChange={handlePictureWordGuess}
               placeholder="What's the word?"
               className="text-center text-xl"
               maxLength={data.correctWord.length}
             />
+            {state.isCorrect && (
+              <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center w-full">
+                <p className="font-medium">Correct! +100 XP</p>
+              </div>
+            )}
           </div>
           <p className="text-sm text-center text-muted-foreground">
             Attempts: {state.attempts}
           </p>
-          {state.isCorrect && (
-            <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
-              <p className="font-medium">Correct! +100 XP</p>
-            </div>
-          )}
+          
         </div>
       </div>
     );
@@ -626,13 +628,14 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
 };
 
 const PictureWordGame = ({ data, gameState, setGameState, onComplete }: any) => {
-  const state = gameState || { userGuess: "", attempts: 0 };
+  const state = gameState || { userGuess: "", attempts: 0, isCorrect: false };
 
   const handleGuess = (e: React.ChangeEvent<HTMLInputElement>) => {
     const guess = e.target.value;
     setGameState({ ...state, userGuess: guess, attempts: state.attempts + 1 });
 
     if (guess.toLowerCase() === data.correctWord.toLowerCase()) {
+      setGameState({...state, isCorrect: true});
       onComplete(100);
     }
   };
@@ -662,6 +665,11 @@ const PictureWordGame = ({ data, gameState, setGameState, onComplete }: any) => 
             className="text-center text-xl"
             maxLength={data.correctWord.length}
           />
+          {state.isCorrect && (
+            <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center w-full">
+              <p className="font-medium">Correct! +100 XP</p>
+            </div>
+          )}
         </div>
         <p className="text-sm text-center text-muted-foreground">
           Attempts: {state.attempts}
