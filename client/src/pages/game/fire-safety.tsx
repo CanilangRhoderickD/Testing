@@ -108,12 +108,18 @@ export default function FireSafetyGame() {
           ))}
         </div>
         <div className="space-y-4">
-          <Input
-            value={state.userGuess}
-            onChange={(e) => handlePictureWordGuess(e.target.value)}
-            placeholder="What's the word?"
-            className="text-center text-xl"
-          />
+          <div className="flex flex-col items-center gap-2">
+            <div className="bg-muted px-4 py-2 rounded-md mb-2">
+              <p className="text-sm font-medium">Word length: {data.correctWord.length} letters</p>
+            </div>
+            <Input
+              value={state.userGuess}
+              onChange={(e) => handlePictureWordGuess(e.target.value)}
+              placeholder="What's the word?"
+              className="text-center text-xl"
+              maxLength={data.correctWord.length}
+            />
+          </div>
           <p className="text-sm text-center text-muted-foreground">
             Attempts: {state.attempts}
           </p>
@@ -137,6 +143,12 @@ export default function FireSafetyGame() {
           userGuess: guess
         }
       }));
+      
+      // Check if the guess is correct
+      if (guess.toLowerCase() === data.word.toLowerCase()) {
+        play("success");
+        submitProgress(selectedModule!.id, 100);
+      }
     };
 
     return (
@@ -504,6 +516,7 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
     const guess = e.target.value.toUpperCase();
     setGameState({ ...state, userGuess: guess });
 
+    // Check if the guess matches the word (case insensitive)
     if (guess.toLowerCase() === data.word.toLowerCase()) {
       onComplete(100);
     }
@@ -521,13 +534,23 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
         <p className="text-center text-muted-foreground">
           Unscramble the word above related to fire safety
         </p>
-        <Input
-          value={state.userGuess}
-          onChange={handleInputChange}
-          placeholder="Enter your guess"
-          className="text-center text-xl"
-          maxLength={state.scrambledWord.length}
-        />
+        <div className="flex flex-col items-center gap-2">
+          <div className="bg-muted px-4 py-2 rounded-md mb-2">
+            <p className="text-sm font-medium">Word length: {data.word.length} letters</p>
+          </div>
+          <Input
+            value={state.userGuess}
+            onChange={handleInputChange}
+            placeholder="Enter your guess"
+            className="text-center text-xl"
+            maxLength={state.scrambledWord.length}
+          />
+          {data.hint && (
+            <p className="text-sm text-center text-muted-foreground mt-2">
+              Hint: {data.hint}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -559,12 +582,18 @@ const PictureWordGame = ({ data, gameState, setGameState, onComplete }: any) => 
         ))}
       </div>
       <div className="space-y-4">
-        <Input
-          value={state.userGuess}
-          onChange={handleGuess}
-          placeholder="What's the word?"
-          className="text-center text-xl"
-        />
+        <div className="flex flex-col items-center gap-2">
+          <div className="bg-muted px-4 py-2 rounded-md mb-2">
+            <p className="text-sm font-medium">Word length: {data.correctWord.length} letters</p>
+          </div>
+          <Input
+            value={state.userGuess}
+            onChange={handleGuess}
+            placeholder="What's the word?"
+            className="text-center text-xl"
+            maxLength={data.correctWord.length}
+          />
+        </div>
         <p className="text-sm text-center text-muted-foreground">
           Attempts: {state.attempts}
         </p>
