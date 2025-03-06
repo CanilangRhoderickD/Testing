@@ -24,6 +24,7 @@ export function log(message: string, source = "express") {
 
 export async function setupVite(app: Express, server: Server) {
   const port = parseInt(process.env.PORT || "5000");
+  const isLocalDev = process.env.NODE_ENV !== 'production' && !process.env.REPL_ID;
 
   const vite = await createViteServer({
     server: {
@@ -31,8 +32,8 @@ export async function setupVite(app: Express, server: Server) {
       hmr: {
         server: server,
         port: port,
-        host: "0.0.0.0",
-        clientPort: 443,
+        host: isLocalDev ? 'localhost' : "0.0.0.0",
+        clientPort: isLocalDev ? port : 443,
         path: '/hmr',
         protocol: 'ws'
       }
