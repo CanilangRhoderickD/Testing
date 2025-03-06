@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GameModule } from "@/shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/api";
-import useSound from "@/hooks/useSound";
+import { useSound } from "@/lib/use-sound";
 import {
   Card,
   CardContent,
