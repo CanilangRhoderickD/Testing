@@ -36,6 +36,21 @@ const gameTypes = {
     label: "Emergency Simulation",
     description: "Interactive scenario with decision points",
     fields: ["scenario", "decisions", "outcomes"]
+  },
+  crossword: {
+    label: "Crossword",
+    description: "Classic crossword puzzle",
+    fields: ["crosswordJson"]
+  },
+  wordScramble: {
+    label: "Word Scramble",
+    description: "Unscramble the letters to form a word",
+    fields: ["word"]
+  },
+  pictureWord: {
+    label: "4 Pics 1 Word",
+    description: "Guess the word based on four pictures",
+    fields: ["images", "correctWord"]
   }
 };
 
@@ -265,6 +280,94 @@ export default function AdminDashboard() {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleSaveModule = async () => {
+    if (!newModule.title || !newModule.description || !newModule.content?.type) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      // Process game-specific data before saving
+      let moduleToSave = { ...newModule };
+
+      // Process crossword JSON
+      if (newModule.content?.type === "crossword" && newModule.content?.data?.crosswordJson) {
+        try {
+          const parsedCrossword = JSON.parse(newModule.content.data.crosswordJson);
+          moduleToSave = {
+            ...moduleToSave,
+            content: {
+              ...moduleToSave.content,
+              data: parsedCrossword
+            }
+          };
+        } catch (error) {
+          toast.error("Invalid crossword JSON format");
+          return;
+        }
+      }
+
+      // Validate picture word game has exactly 4 images
+      if (newModule.content?.type === "pictureWord") {
+        const images = newModule.content?.data?.images || [];
+
+        if (!Array.isArray(images) || images.length !== 4) {
+          toast.error("Picture Word game requires exactly 4 images");
+          return;
+        }
+
+        if (!newModule.content?.data?.correctWord) {
+          toast.error("Please provide a correct word for the Picture Word game");
+          return;
+        }
+      }
+
+      // Validate word scramble has required fields
+      if (newModule.content?.type === "wordScramble") {
+        if (!newModule.content?.data?.word) {
+          toast.error("Please provide a word for the Word Scramble game");
+          return;
+        }
+      }
+
+      const response = await fetch("/api/modules", {
+        method: selectedModule ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: selectedModule?.id,
+          ...moduleToSave,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(`Module ${selectedModule ? "updated" : "created"} successfully`);
+        setIsDialogOpen(false);
+        fetchModules();
+        setNewModule({
+          title: "",
+          description: "",
+          content: {
+            type: "" as GameType,
+            data: {}
+          },
+          settings: {
+            timeLimit: 0,
+            difficulty: "medium",
+          }
+        });
+      } else {
+        const error = await response.json();
+        toast.error(`Error: ${error.message || "Failed to save module"}`);
+      }
+    } catch (error) {
+      console.error("Error saving module:", error);
+      toast.error("Failed to save module");
+    }
+  };
+
+
   if (loading && modules.length === 0) {
     return (
       <div className="flex h-[400px] w-full items-center justify-center">
@@ -289,6 +392,9 @@ export default function AdminDashboard() {
             <TabsTrigger value="memory">Memory</TabsTrigger>
             <TabsTrigger value="sorting">Sorting</TabsTrigger>
             <TabsTrigger value="simulation">Simulation</TabsTrigger>
+            <TabsTrigger value="crossword">Crossword</TabsTrigger>
+            <TabsTrigger value="wordScramble">Word Scramble</TabsTrigger>
+            <TabsTrigger value="pictureWord">4 Pics 1 Word</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
@@ -410,7 +516,7 @@ export default function AdminDashboard() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSaveModule} className="space-y-4"> {/* Changed onSubmit handler */}
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-1.5">
@@ -517,12 +623,50 @@ export default function AdminDashboard() {
                     {gameTypes[selectedType as GameType]?.description}
                   </p>
 
-                  {/* Currently placeholder - would be expanded with specific fields for each game type */}
-                  <div className="space-y-4">
-                    <p className="text-sm">
-                      More configuration options for this game type will be available soon.
-                    </p>
-                  </div>
+                  {selectedType === "crossword" && (
+                    <div>
+                      <Label htmlFor="content.data.crosswordJson">Crossword JSON</Label>
+                      <Textarea
+                        id="content.data.crosswordJson"
+                        name="content.data.crosswordJson"
+                        value={newModule.content?.data.crosswordJson || ""}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  )}
+
+                  {selectedType === "wordScramble" && (
+                    <div>
+                      <Label htmlFor="content.data.word">Word</Label>
+                      <Input
+                        id="content.data.word"
+                        name="content.data.word"
+                        value={newModule.content?.data.word || ""}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  )}
+
+                  {selectedType === "pictureWord" && (
+                    <>
+                      <Label htmlFor="content.data.images">Images (comma-separated URLs)</Label>
+                      <Input
+                        id="content.data.images"
+                        name="content.data.images"
+                        value={newModule.content?.data.images || ""}
+                        onChange={handleInputChange}
+                      />
+                      <Label htmlFor="content.data.correctWord">Correct Word</Label>
+                      <Input
+                        id="content.data.correctWord"
+                        name="content.data.correctWord"
+                        value={newModule.content?.data.correctWord || ""}
+                        onChange={handleInputChange}
+                      />
+                    </>
+                  )}
+
+                  {/* Placeholder for other game types */}
                 </div>
               )}
             </div>
