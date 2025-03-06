@@ -57,6 +57,9 @@ export default function FireSafetyGame() {
 
   const renderGameContent = () => {
     if (!selectedModule) return null;
+    
+    // Handle multiple game instances if content has instances array
+    const hasMultipleInstances = selectedModule.content.instances && Array.isArray(selectedModule.content.instances);
 
     switch (selectedModule.content.type) {
       case "quiz":
@@ -73,6 +76,81 @@ export default function FireSafetyGame() {
         return <p>Unsupported game type</p>;
     }
   };
+
+
+    // Handle different game types with multiple instances
+    const [currentInstanceIndex, setCurrentInstanceIndex] = useState(0);
+    
+    // Function to render the appropriate game component based on content type and instance
+    const renderGameComponent = (content: any, instanceIndex?: number) => {
+      const idx = instanceIndex !== undefined ? instanceIndex : currentInstanceIndex;
+      const contentData = hasMultipleInstances 
+        ? selectedModule.content.instances[idx] 
+        : selectedModule.content.data;
+        
+      switch (selectedModule.content.type) {
+        case "wordScramble":
+          return (
+            <WordScrambleGame 
+              data={contentData} 
+              gameState={gameState.wordScramble} 
+              setGameState={(state) => setGameState({...gameState, wordScramble: state})}
+              onComplete={(score) => submitProgress(selectedModule.id, score)}
+            />
+          );
+        case "pictureWord":
+          return (
+            <PictureWordGame 
+              data={contentData} 
+              gameState={gameState.pictureWord}
+              setGameState={(state) => setGameState({...gameState, pictureWord: state})}
+              onComplete={(score) => submitProgress(selectedModule.id, score)}
+            />
+          );
+        case "tutorial":
+          return (
+            <TutorialContent 
+              data={contentData}
+              onComplete={() => submitProgress(selectedModule.id, 100)}
+            />
+          );
+        default:
+          return <div>Unknown game type</div>;
+      }
+    };
+    
+    // If module has multiple instances, show instance navigation
+    if (hasMultipleInstances) {
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center mb-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentInstanceIndex(prev => Math.max(0, prev - 1))}
+              disabled={currentInstanceIndex === 0}
+            >
+              Previous
+            </Button>
+            <span className="text-sm font-medium">
+              Instance {currentInstanceIndex + 1} of {selectedModule.content.instances.length}
+            </span>
+            <Button 
+              variant="outline"
+              onClick={() => setCurrentInstanceIndex(prev => 
+                Math.min(selectedModule.content.instances.length - 1, prev + 1))}
+              disabled={currentInstanceIndex === selectedModule.content.instances.length - 1}
+            >
+              Next
+            </Button>
+          </div>
+          
+          {renderGameComponent(selectedModule.content, currentInstanceIndex)}
+        </div>
+      );
+    }
+    
+    // If single instance, render directly
+    return renderGameComponent(selectedModule.content);
 
   const renderQuizContent = (data: any) => {
     const state = gameState.quiz || { currentQuestion: 0, score: 0 };
@@ -451,7 +529,7 @@ export default function FireSafetyGame() {
         setSelectedModule(null);
         setGameState({});
       }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-[95vw] max-w-[90vw] md:max-w-[85vw] lg:max-w-[75vw] xl:max-w-4xl h-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedModule?.title}</DialogTitle>
           </DialogHeader>

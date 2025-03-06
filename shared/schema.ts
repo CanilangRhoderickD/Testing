@@ -1,6 +1,25 @@
+
 import { pgTable, text, serial, integer, boolean, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Define content structure types for different game types
+export interface GameContent {
+  type: string;
+  data?: any;
+  instances?: any[];
+}
+
+export interface GameModule {
+  id: number;
+  title: string;
+  description: string;
+  ageGroup: string;
+  difficulty: string;
+  content: GameContent;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),

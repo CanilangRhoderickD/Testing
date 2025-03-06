@@ -14,16 +14,86 @@ import { GameModule } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Define game type templates
+// Define game type templates with multiple instances support
 const gameTypes = {
   quiz: {
     label: "Quiz",
     template: {
-      questions: [
+      type: "quiz",
+      data: {
+        questions: [
+          {
+            question: "Sample question?",
+            options: ["Option A", "Option B", "Option C", "Option D"],
+            correctAnswer: 0
+          }
+        ]
+      }
+    },
+    multipleInstancesTemplate: {
+      type: "quiz",
+      instances: [
         {
-          question: "Sample question?",
-          options: ["Option A", "Option B", "Option C", "Option D"],
-          correctAnswer: 0
+          questions: []
+        }
+      ]
+    }
+  },
+  tutorial: {
+    label: "Tutorial",
+    template: {
+      type: "tutorial",
+      data: {
+        sections: []
+      }
+    },
+    multipleInstancesTemplate: {
+      type: "tutorial",
+      instances: [
+        {
+          sections: []
+        }
+      ]
+    }
+  },
+  wordScramble: {
+    label: "Word Scramble",
+    template: {
+      type: "wordScramble",
+      data: {
+        word: "",
+        hint: "",
+        category: ""
+      }
+    },
+    multipleInstancesTemplate: {
+      type: "wordScramble",
+      instances: [
+        {
+          word: "",
+          hint: "",
+          category: ""
+        }
+      ]
+    }
+  },
+  pictureWord: {
+    label: "Picture Word",
+    template: {
+      type: "pictureWord",
+      data: {
+        images: [],
+        correctWord: "",
+        hints: []
+      }
+    },
+    multipleInstancesTemplate: {
+      type: "pictureWord",
+      instances: [
+        {
+          images: [],
+          correctWord: "",
+          hints: []
         }
       ]
     }
@@ -31,46 +101,47 @@ const gameTypes = {
   crossword: {
     label: "Crossword",
     template: {
-      grid: [
-        ["*", "*", "*", "*", "*"],
-        ["*", "", "", "", "*"],
-        ["*", "", "*", "", "*"],
-        ["*", "", "", "", "*"],
-        ["*", "*", "*", "*", "*"]
-      ],
-      words: ["fire", "safe"],
-      clues: ["What to avoid", "How to be"]
-    }
-  },
-  pictureWord: {
-    label: "Picture Word",
-    template: {
-      images: ["/images/image1.jpg", "/images/image2.jpg"],
-      correctWord: "SAFETY",
-      hints: ["Equipment that helps in emergencies"]
-    }
-  },
-  wordScramble: {
-    label: "Word Scramble",
-    template: {
-      word: "ESCAPE",
-      hint: "What you need to do in case of fire",
-      category: "Safety Actions"
-    }
-  },
-  tutorial: {
-    label: "Tutorial",
-    template: {
-      sections: [
+      type: "crossword",
+      data: {
+        grid: [],
+        clues: {
+          across: [],
+          down: []
+        }
+      }
+    },
+    multipleInstancesTemplate: {
+      type: "crossword",
+      instances: [
         {
-          title: "Introduction",
-          content: "This is the introduction to fire safety.",
-          type: "introduction"
+          grid: [],
+          clues: {
+            across: [],
+            down: []
+          }
+        }
+      ]
+    }
+  },
+  quiz2: { // Added a second quiz entry to demonstrate the fix.  Remove this if only one quiz is intended.
+    label: "Quiz",
+    template: {
+      type: "quiz",
+      data: {
+        questions: []
+      }
+    },
+    multipleInstancesTemplate: {
+      type: "quiz",
+      instances: [
+        {
+          questions: []
         }
       ]
     }
   }
 };
+
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -81,6 +152,34 @@ export default function AdminDashboard() {
   const [selectedModule, setSelectedModule] = useState<GameModule | null>(null);
   const [selectedType, setSelectedType] = useState<string>("quiz");
   const [moduleToDelete, setModuleToDelete] = useState<GameModule | null>(null);
+
+  const [useMultipleInstances, setUseMultipleInstances] = useState(false);
+
+  const handleGameTypeChange = (value: string) => {
+    const selectedType = value as keyof typeof gameTypes;
+    setNewModule({
+      ...newModule, 
+      content: useMultipleInstances 
+        ? gameTypes[selectedType]?.multipleInstancesTemplate || {} 
+        : gameTypes[selectedType]?.template || {}
+    });
+  };
+
+  const toggleMultipleInstances = () => {
+    const newValue = !useMultipleInstances;
+    setUseMultipleInstances(newValue);
+
+    // Update content structure based on multiple instances setting
+    if (newModule.content.type && gameTypes[newModule.content.type as keyof typeof gameTypes]) {
+      setNewModule({
+        ...newModule,
+        content: newValue 
+          ? gameTypes[newModule.content.type as keyof typeof gameTypes].multipleInstancesTemplate 
+          : gameTypes[newModule.content.type as keyof typeof gameTypes].template
+      });
+    }
+  };
+
   const [currentContentTemplate, setCurrentContentTemplate] = useState("");
   const [formData, setFormData] = useState({}); // Added formData state
 
@@ -163,6 +262,38 @@ export default function AdminDashboard() {
   const handleEdit = (module: GameModule) => {
     setSelectedModule(module);
     setSelectedType(module.content.type);
+
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="gameType">Game Type</Label>
+                  <Select 
+                    value={newModule.content?.type || ""} 
+                    onValueChange={handleGameTypeChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select game type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(gameTypes).map(([key, value]) => (
+                        <SelectItem key={key} value={key}>{value.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              
+                {/* End of first section */}
+                
+                <div className="space-y-2">
+                <div className="flex items-center space-x-2 mt-2">
+                    <input 
+                    type="checkbox" 
+                    id="multipleInstances" 
+                    checked={useMultipleInstances}
+                    onChange={toggleMultipleInstances}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="multipleInstances">Enable multiple game instances</Label>
+                </div>
+
     setCurrentContentTemplate(JSON.stringify(module.content.data, null, 2));
     setEditDialogOpen(true);
   };
@@ -370,7 +501,7 @@ export default function AdminDashboard() {
                   rows={10}
                   required
                 />
-                
+
                 {selectedType && (
                   <div className="mt-2 p-3 bg-gray-100 rounded-md text-sm">
                     <h4 className="font-semibold mb-1">Format Guide for {gameTypes[selectedType as keyof typeof gameTypes]?.label}</h4>
@@ -607,6 +738,7 @@ export default function AdminDashboard() {
               ))}
             </div>
           )}
+          </div>
         </TabsContent>
         <TabsContent value="stats" className="py-4">
           <div className="border rounded-lg p-6">
