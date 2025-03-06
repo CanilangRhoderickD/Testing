@@ -23,31 +23,17 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { 
-      server,
-      port: parseInt(process.env.PORT || "5000"),
-      host: "0.0.0.0",
-      clientPort: parseInt(process.env.PORT || "5000"),
-      path: '/hmr',
-      timeout: 60000
-    },
-    allowedHosts: true,
-  };
-
   const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
-    customLogger: {
-      ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
-      },
+    server: {
+      middlewareMode: true,
+      hmr: {
+        server: server,
+        port: 3000,
+        clientPort: 443
+      }
     },
-    server: serverOptions,
-    appType: "custom",
+    root: path.resolve("client"),
+    appType: "spa",
   });
 
   app.use(vite.middlewares);
