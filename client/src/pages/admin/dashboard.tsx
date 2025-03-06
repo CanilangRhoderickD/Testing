@@ -12,90 +12,27 @@ import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { GameModule, GameType } from "@shared/schema";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Textarea } from "@/components/ui/textarea"; // Added from original
+import { Textarea } from "@/components/ui/textarea";
 
 
 // Define game types
 const gameTypes = {
   quiz: {
-    label: "Quiz",
-    description: "Multiple choice questions to test knowledge",
-    defaultContent: JSON.stringify({
-      questions: [
-        {
-          question: "What should you do if your clothes catch fire?",
-          options: ["Run", "Stop, drop, and roll", "Jump in water", "Call for help"],
-          correctAnswer: 1
-        }
-      ]
-    }, null, 2)
-  },
-  pictureWord: {
-    label: "Picture Word",
-    description: "Identify the word from multiple images",
-    defaultContent: JSON.stringify({
-      images: [
-        "/images/extinguisher.jpg",
-        "/images/smoke-detector.jpg",
-        "/images/fire-blanket.jpg",
-        "/images/exit-sign.jpg"
-      ],
-      correctWord: "SAFETY",
-      hints: ["Equipment that helps in emergencies"]
-    }, null, 2)
-  },
-  wordScramble: {
-    label: "Word Scramble",
-    description: "Unscramble the word related to fire safety",
-    defaultContent: JSON.stringify({
-      word: "ESCAPE",
-      hint: "What you need to do in case of fire",
-      category: "Safety Actions"
-    }, null, 2)
-  },
-  tutorial: {
-    label: "Tutorial",
-    description: "Interactive learning content with guidance",
-    defaultContent: JSON.stringify({
-      sections: [
-        {
-          title: "Welcome to Fire Safety",
-          content: "This tutorial will teach you about fire safety basics.",
-          type: "introduction"
-        },
-        {
-          title: "Navigation Guide",
-          content: "Learn how to use the platform's features.",
-          type: "walkthrough",
-          steps: [
-            {
-              title: "Your Dashboard",
-              description: "View your progress and achievements here.",
-              target: ".dashboard-stats"
-            }
-          ]
-        }
-      ]
-    }, null, 2)
-  }
-};
-const gameTypes = {
-  quiz: { 
     label: "Quiz Game",
     description: "Multiple-choice questions with correct answers",
     fields: ["question", "options", "correctAnswer"]
   },
-  memory: { 
+  memory: {
     label: "Memory Match",
     description: "Matching pairs of cards with fire safety concepts",
     fields: ["pairs"]
   },
-  sorting: { 
+  sorting: {
     label: "Sorting Game",
     description: "Sort items into correct categories",
     fields: ["categories", "items"]
   },
-  simulation: { 
+  simulation: {
     label: "Emergency Simulation",
     description: "Interactive scenario with decision points",
     fields: ["scenario", "decisions", "outcomes"]
@@ -198,8 +135,8 @@ export default function AdminDashboard() {
 
       // Determine if this is an edit or a new module
       const method = selectedModule ? "PUT" : "POST";
-      const url = selectedModule 
-        ? `/api/modules/${selectedModule.id}` 
+      const url = selectedModule
+        ? `/api/modules/${selectedModule.id}`
         : "/api/modules";
 
       const response = await fetch(url, {
@@ -217,7 +154,7 @@ export default function AdminDashboard() {
 
         // Update the local state
         if (selectedModule) {
-          setModules(modules.map(mod => 
+          setModules(modules.map(mod =>
             mod.id === selectedModule.id ? data : mod
           ));
         } else {
@@ -489,8 +426,8 @@ export default function AdminDashboard() {
 
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="gameType">Game Type</Label>
-                  <Select 
-                    value={newModule.content?.type || ""} 
+                  <Select
+                    value={newModule.content?.type || ""}
                     onValueChange={handleGameTypeChange}
                   >
                     <SelectTrigger>
@@ -508,9 +445,9 @@ export default function AdminDashboard() {
 
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 mt-2">
-                    <input 
-                      type="checkbox" 
-                      id="multipleInstances" 
+                    <input
+                      type="checkbox"
+                      id="multipleInstances"
                       checked={useMultipleInstances}
                       onChange={toggleMultipleInstances}
                       className="h-4 w-4 rounded border-gray-300"
@@ -533,9 +470,9 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="settings.difficulty">Difficulty</Label>
-                  <Select 
-                    value={newModule.settings?.difficulty || "medium"} 
-                    onValueChange={(value) => 
+                  <Select
+                    value={newModule.settings?.difficulty || "medium"}
+                    onValueChange={(value) =>
                       setNewModule({
                         ...newModule,
                         settings: {
@@ -591,9 +528,9 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex justify-end space-x-2">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
                 Cancel
