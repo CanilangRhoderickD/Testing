@@ -33,6 +33,7 @@ interface GameState {
   wordScramble?: {
     userGuess: string;
     scrambledWord: string;
+    isCorrect: boolean;
   };
   quiz?: {
     currentQuestion: number;
@@ -96,7 +97,7 @@ export default function FireSafetyGame() {
 
     const handlePictureWordGuess = (guess: string) => {
       const isCorrect = guess.toLowerCase() === data.correctWord.toLowerCase();
-      
+
       setGameState(prev => ({
         ...prev,
         pictureWord: {
@@ -162,7 +163,7 @@ export default function FireSafetyGame() {
     const handleScrambleGuess = (e: React.ChangeEvent<HTMLInputElement>) => {
       const guess = e.target.value.toUpperCase();
       const isCorrect = guess.toLowerCase() === data.word.toLowerCase();
-      
+
       setGameState(prev => ({
         ...prev,
         wordScramble: {
@@ -221,29 +222,29 @@ export default function FireSafetyGame() {
     const checkCrosswordAnswers = (answers: string[][]) => {
       // This is a simplified check - a real implementation would check against data.clues
       let allCorrect = true;
-      
+
       if (data.clues) {
         // Check across clues
         for (const clue of data.clues.across || []) {
           // Implementation would verify each clue's answer matches the grid
         }
-        
+
         // Check down clues
         for (const clue of data.clues.down || []) {
           // Implementation would verify each clue's answer matches the grid
         }
       }
-      
+
       return allCorrect;
     };
-    
+
     // Update when a cell changes
     const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
       const newAnswers = [...state.userAnswers];
       newAnswers[rowIndex][colIndex] = value;
-      
+
       const isCorrect = checkCrosswordAnswers(newAnswers);
-      
+
       setGameState({
         ...gameState,
         crossword: {
@@ -252,7 +253,7 @@ export default function FireSafetyGame() {
           isCorrect: isCorrect
         }
       });
-      
+
       if (isCorrect) {
         play("success");
         submitProgress(selectedModule!.id, 100);
@@ -284,7 +285,7 @@ export default function FireSafetyGame() {
             </div>
           ))}
         </div>
-        
+
         {state.isCorrect && (
           <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
             <p className="font-medium">Crossword Complete! +100 XP</p>
@@ -582,7 +583,7 @@ export default function FireSafetyGame() {
 
 // Game component types
 const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) => {
-  const state = gameState || { userGuess: "", scrambledWord: scrambleWord(data.word) };
+  const state = gameState || { userGuess: "", scrambledWord: scrambleWord(data.word), isCorrect: false };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const guess = e.target.value.toUpperCase();
@@ -590,6 +591,7 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
 
     // Check if the guess matches the word (case insensitive)
     if (guess.toLowerCase() === data.word.toLowerCase()) {
+      setGameState({...state, isCorrect: true});
       onComplete(100);
     }
   };
@@ -606,23 +608,18 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
         <p className="text-center text-muted-foreground">
           Unscramble the word above related to fire safety
         </p>
-        <div className="flex flex-col items-center gap-2">
-          <div className="bg-muted px-4 py-2 rounded-md mb-2">
-            <p className="text-sm font-medium">Word length: {data.word.length} letters</p>
+        <Input
+          value={state.userGuess}
+          onChange={handleInputChange}
+          placeholder="Enter your guess"
+          className="text-center text-xl"
+          maxLength={state.scrambledWord.length}
+        />
+        {state.isCorrect && (
+          <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
+            <p className="font-medium">Correct! +100 XP</p>
           </div>
-          <Input
-            value={state.userGuess}
-            onChange={handleInputChange}
-            placeholder="Enter your guess"
-            className="text-center text-xl"
-            maxLength={state.scrambledWord.length}
-          />
-          {data.hint && (
-            <p className="text-sm text-center text-muted-foreground mt-2">
-              Hint: {data.hint}
-            </p>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
