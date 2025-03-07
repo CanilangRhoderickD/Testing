@@ -50,6 +50,7 @@ export async function setupVite(app: Express, server: Server) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     hmr: { 
       server,
       port: parseInt(process.env.PORT || "5000"),
@@ -58,6 +59,9 @@ export async function setupVite(app: Express, server: Server) {
       path: '/hmr',
       timeout: 60000
     },
+=======
+    hmr: { server },
+>>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
 =======
     hmr: { server },
 >>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
