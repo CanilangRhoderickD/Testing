@@ -161,7 +161,7 @@ export default function FireSafetyGame() {
           <p className="text-sm text-center text-muted-foreground">
             Attempts: {state.attempts}
           </p>
-
+          
         </div>
       </div>
     );
@@ -214,6 +214,10 @@ export default function FireSafetyGame() {
             onChange={handleScrambleGuess}
             placeholder="Enter your guess"
             className="text-center text-xl"
+<<<<<<< HEAD
+=======
+            maxLength={state.scrambledWord.length}
+>>>>>>> parent of 6dbbc71 (Assistant checkpoint: Fixed game recognition and display of correct answers)
           />
           {state.isCorrect && (
             <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
@@ -633,6 +637,10 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
           onChange={handleInputChange}
           placeholder="Enter your guess"
           className="text-center text-xl"
+<<<<<<< HEAD
+=======
+          maxLength={state.scrambledWord.length}
+>>>>>>> parent of 6dbbc71 (Assistant checkpoint: Fixed game recognition and display of correct answers)
         />
         {state.isCorrect && (
           <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
