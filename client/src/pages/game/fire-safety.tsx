@@ -31,7 +31,7 @@ import { useSound } from "@/hooks/use-sound";
 import { useState } from "react";
 
 export default function FireSafetyGame() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient(); // Moved here
   const { user } = useAuth();
   const { play } = useSound();
   const [selectedModule, setSelectedModule] = useState<GameModule | null>(null);
