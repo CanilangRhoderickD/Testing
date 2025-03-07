@@ -104,22 +104,19 @@ export default function FireSafetyGame() {
   };
 
   const renderPictureWordContent = (data: any) => {
-    const state = gameState.pictureWord || { userGuess: "", attempts: 0, isCorrect: false };
+    const state = gameState.pictureWord || { userGuess: "", attempts: 0 };
 
     const handlePictureWordGuess = (guess: string) => {
-      const isCorrect = guess.toLowerCase() === data.correctWord.toLowerCase();
-      
       setGameState(prev => ({
         ...prev,
         pictureWord: {
           userGuess: guess,
-          attempts: prev.pictureWord?.attempts ? prev.pictureWord.attempts + 1 : 1,
-          isCorrect: isCorrect
+          attempts: prev.pictureWord?.attempts ? prev.pictureWord.attempts + 1 : 1
         }
       }));
 
       // Check if the guess is correct
-      if (isCorrect) {
+      if (guess.toLowerCase() === data.correctWord.toLowerCase()) {
         play("success");
         submitProgress(selectedModule!.id, 100);
       }
@@ -154,11 +151,6 @@ export default function FireSafetyGame() {
           <p className="text-sm text-center text-muted-foreground">
             Attempts: {state.attempts}
           </p>
-          {state.isCorrect && (
-            <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
-              <p className="font-medium">Correct! +100 XP</p>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -167,12 +159,12 @@ export default function FireSafetyGame() {
   const renderWordScrambleContent = (data: any) => {
     const state = gameState.wordScramble || {
       userGuess: "",
-      scrambledWord: scrambleWord(data.word),
-      isCorrect: false
+      scrambledWord: scrambleWord(data.word)
     };
 
     const handleScrambleGuess = (e: React.ChangeEvent<HTMLInputElement>) => {
       const guess = e.target.value.toUpperCase();
+<<<<<<< HEAD
       const isCorrect = guess.toLowerCase() === data.word.toLowerCase();
       
 <<<<<<< HEAD
@@ -180,18 +172,23 @@ export default function FireSafetyGame() {
 
 =======
 >>>>>>> parent of 3b02bf5 (Assistant checkpoint: Added success confirmations to games)
+=======
+>>>>>>> parent of 8795742 (Assistant checkpoint: Added feedback messages for game completion)
       setGameState(prev => ({
         ...prev,
         wordScramble: {
           ...prev.wordScramble!,
-          userGuess: guess,
-          isCorrect: isCorrect
+          userGuess: guess
         }
       }));
 
       // Check if the guess is correct
+<<<<<<< HEAD
       if (isCorrect) {
         console.log("Word Scramble - Correct answer!");
+=======
+      if (guess.toLowerCase() === data.word.toLowerCase()) {
+>>>>>>> parent of 8795742 (Assistant checkpoint: Added feedback messages for game completion)
         play("success");
         submitProgress(selectedModule!.id, 100);
       }
@@ -219,11 +216,6 @@ export default function FireSafetyGame() {
             maxLength={state.scrambledWord.length}
 >>>>>>> parent of 6dbbc71 (Assistant checkpoint: Fixed game recognition and display of correct answers)
           />
-          {state.isCorrect && (
-            <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
-              <p className="font-medium">Correct! +100 XP</p>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -234,50 +226,7 @@ export default function FireSafetyGame() {
       selectedCell: null,
       userAnswers: Array(data.grid.length).fill(null).map(() => 
         Array(data.grid[0].length).fill("")
-      ),
-      isCorrect: false
-    };
-
-    // Check if all words in the crossword are correct
-    const checkCrosswordAnswers = (answers: string[][]) => {
-      // This is a simplified check - a real implementation would check against data.clues
-      let allCorrect = true;
-      
-      if (data.clues) {
-        // Check across clues
-        for (const clue of data.clues.across || []) {
-          // Implementation would verify each clue's answer matches the grid
-        }
-        
-        // Check down clues
-        for (const clue of data.clues.down || []) {
-          // Implementation would verify each clue's answer matches the grid
-        }
-      }
-      
-      return allCorrect;
-    };
-    
-    // Update when a cell changes
-    const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
-      const newAnswers = [...state.userAnswers];
-      newAnswers[rowIndex][colIndex] = value;
-      
-      const isCorrect = checkCrosswordAnswers(newAnswers);
-      
-      setGameState({
-        ...gameState,
-        crossword: {
-          ...state,
-          userAnswers: newAnswers,
-          isCorrect: isCorrect
-        }
-      });
-      
-      if (isCorrect) {
-        play("success");
-        submitProgress(selectedModule!.id, 100);
-      }
+      )
     };
 
     return (
@@ -297,7 +246,17 @@ export default function FireSafetyGame() {
                       className="w-full h-full text-center uppercase font-bold"
                       maxLength={1}
                       value={state.userAnswers[rowIndex][colIndex]}
-                      onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
+                      onChange={(e) => {
+                        const newAnswers = [...state.userAnswers];
+                        newAnswers[rowIndex][colIndex] = e.target.value;
+                        setGameState({
+                          ...gameState,
+                          crossword: {
+                            ...state,
+                            userAnswers: newAnswers
+                          }
+                        });
+                      }}
                     />
                   )}
                 </div>
@@ -305,12 +264,6 @@ export default function FireSafetyGame() {
             </div>
           ))}
         </div>
-        
-        {state.isCorrect && (
-          <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-md text-center">
-            <p className="font-medium">Crossword Complete! +100 XP</p>
-          </div>
-        )}
       </div>
     );
   };
