@@ -25,6 +25,7 @@ export function log(message: string, source = "express") {
 export async function setupVite(app: Express, server: Server) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   const port = parseInt(process.env.PORT || "5000");
 
 =======
@@ -77,6 +78,18 @@ export async function setupVite(app: Express, server: Server) {
 =======
     hmr: { server },
 >>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
+=======
+  const serverOptions = {
+    middlewareMode: true,
+    hmr: { 
+      server,
+      port: parseInt(process.env.PORT || "5000"),
+      host: "0.0.0.0",
+      clientPort: parseInt(process.env.PORT || "5000"),
+      path: '/hmr',
+      timeout: 60000
+    },
+>>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
     allowedHosts: true,
   };
 
@@ -92,9 +105,12 @@ export async function setupVite(app: Express, server: Server) {
     },
     server: serverOptions,
     appType: "custom",
+<<<<<<< HEAD
 >>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
 =======
 >>>>>>> parent of 444051b (Checkpoint before assistant change: Fix: Resolve dependency issues and configure Vite server for correct port and hmr)
+=======
+>>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
   });
 
   app.use(vite.middlewares);
