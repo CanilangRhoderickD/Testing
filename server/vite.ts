@@ -3,11 +3,10 @@ import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer, createLogger } from "vite";
+import { nanoid } from "nanoid";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-import { type Server } from "http";
-import viteConfig from "../vite.config";
-import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
 
@@ -18,150 +17,45 @@ export function log(message: string, source = "express") {
     second: "2-digit",
     hour12: true,
   });
-
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
-export async function setupVite(app: Express, server: Server) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+export async function setupVite(app: Express) {
   const port = parseInt(process.env.PORT || "5000");
 
-=======
->>>>>>> parent of 06d15cc (Assistant checkpoint: Fix React hooks and Vite connection issues)
-=======
->>>>>>> parent of 06d15cc (Assistant checkpoint: Fix React hooks and Vite connection issues)
   const vite = await createViteServer({
     server: {
       middlewareMode: true,
       hmr: {
-        server: server,
-<<<<<<< HEAD
-<<<<<<< HEAD
-        port: 3000,
-        clientPort: 443
-=======
-        port: parseInt(process.env.PORT || "3000"),
-=======
         port: port,
->>>>>>> parent of ad12085 (Assistant checkpoint: Fix path resolution for local development)
-        host: "0.0.0.0",
-        clientPort: 443,
-        path: '/hmr',
-        protocol: 'ws'
->>>>>>> parent of 06d15cc (Assistant checkpoint: Fix React hooks and Vite connection issues)
-      }
-    },
-    root: path.resolve("client"),
-    appType: "spa",
-<<<<<<< HEAD
-<<<<<<< HEAD
-    optimizeDeps: {
-      force: true
-    }
-=======
-  const serverOptions = {
-    middlewareMode: true,
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    hmr: { 
-      server,
-      clientPort: 5000,
-      path: '/hmr',
-      timeout: 60000
-    },
-=======
-    hmr: { server },
->>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
-=======
-    hmr: { server },
->>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
-=======
-    hmr: { server },
->>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
-=======
-    hmr: { server },
->>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
-=======
-    hmr: { server },
->>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
-=======
-    hmr: { server },
->>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
-=======
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { 
-      server,
-      clientPort: 5000,
-      path: '/hmr',
-      timeout: 60000
-    },
->>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
-=======
-    hmr: { server },
->>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
-=======
-  const serverOptions = {
-    middlewareMode: true,
-    hmr: { 
-      server,
-      port: parseInt(process.env.PORT || "5000"),
-      host: "0.0.0.0",
-      clientPort: parseInt(process.env.PORT || "5000"),
-      path: '/hmr',
-      timeout: 60000
-    },
->>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
-    allowedHosts: true,
-  };
-
-  const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
-    customLogger: {
-      ...viteLogger,
-      error: (msg, options) => {
-        viteLogger.error(msg, options);
-        process.exit(1);
+        host: "localhost",
+        clientPort: port,
+        path: "/hmr",
+        protocol: "ws",
       },
     },
-    server: serverOptions,
-    appType: "custom",
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
-=======
->>>>>>> parent of 444051b (Checkpoint before assistant change: Fix: Resolve dependency issues and configure Vite server for correct port and hmr)
-=======
->>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
-=======
->>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
-=======
->>>>>>> parent of 444051b (Checkpoint before assistant change: Fix: Resolve dependency issues and configure Vite server for correct port and hmr)
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "../client/src"),
+        "@shared": path.resolve(__dirname, "../shared"),
+      },
+    },
+    root: path.resolve(__dirname, "..", "client"),
+    appType: "spa",
+    optimizeDeps: { force: true },
   });
 
   app.use(vite.middlewares);
+
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
-
     try {
-      const clientTemplate = path.resolve(
-        __dirname,
-        "..",
-        "client",
-        "index.html",
-      );
+      const clientTemplate = path.resolve(__dirname, "..", "client", "index.html");
+      if (!fs.existsSync(clientTemplate)) {
+        console.error(`⚠️ index.html not found at: ${clientTemplate}`);
+        return res.status(500).send("index.html not found");
+      }
 
-      // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
@@ -177,17 +71,13 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "public");
+  const distPath = path.resolve(__dirname, "..", "client", "dist");
 
   if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    throw new Error(`⚠️ Build directory not found: ${distPath}. Run 'npm run build' first.`);
   }
 
   app.use(express.static(distPath));
-
-  // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
