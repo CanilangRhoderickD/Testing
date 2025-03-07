@@ -52,6 +52,10 @@ interface GameState {
 >>>>>>> parent of 444051b (Checkpoint before assistant change: Fix: Resolve dependency issues and configure Vite server for correct port and hmr)
 
 export default function FireSafetyGame() {
+<<<<<<< HEAD
+=======
+  const queryClient = useQueryClient(); // Moved here
+>>>>>>> parent of 06d15cc (Assistant checkpoint: Fix React hooks and Vite connection issues)
   const { user } = useAuth();
   const { play } = useSound();
   const [selectedModule, setSelectedModule] = useState<GameModule | null>(null);

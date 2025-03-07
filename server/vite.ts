@@ -27,8 +27,11 @@ export async function setupVite(app: Express, server: Server) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   const port = parseInt(process.env.PORT || "5000");
 
+=======
+>>>>>>> parent of 06d15cc (Assistant checkpoint: Fix React hooks and Vite connection issues)
 =======
 >>>>>>> parent of 06d15cc (Assistant checkpoint: Fix React hooks and Vite connection issues)
   const vite = await createViteServer({
@@ -36,8 +39,16 @@ export async function setupVite(app: Express, server: Server) {
       middlewareMode: true,
       hmr: {
         server: server,
+<<<<<<< HEAD
         port: 3000,
         clientPort: 443
+=======
+        port: parseInt(process.env.PORT || "3000"),
+        host: "0.0.0.0",
+        clientPort: 443,
+        path: '/hmr',
+        protocol: 'ws'
+>>>>>>> parent of 06d15cc (Assistant checkpoint: Fix React hooks and Vite connection issues)
       }
     },
     root: path.resolve("client"),
