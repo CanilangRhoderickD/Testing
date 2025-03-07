@@ -23,26 +23,72 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+<<<<<<< HEAD
+<<<<<<< HEAD
   const port = parseInt(process.env.PORT || "5000");
-  const isLocalDev = process.env.NODE_ENV !== 'production' && !process.env.REPL_ID;
 
+=======
+>>>>>>> parent of 06d15cc (Assistant checkpoint: Fix React hooks and Vite connection issues)
   const vite = await createViteServer({
     server: {
       middlewareMode: true,
       hmr: {
         server: server,
-        port: port,
-        host: isLocalDev ? 'localhost' : "0.0.0.0",
-        clientPort: isLocalDev ? port : 443,
-        path: '/hmr',
-        protocol: 'ws'
+        port: 3000,
+        clientPort: 443
       }
     },
     root: path.resolve("client"),
     appType: "spa",
+<<<<<<< HEAD
     optimizeDeps: {
       force: true
     }
+=======
+  const serverOptions = {
+    middlewareMode: true,
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+    hmr: { 
+      server,
+      port: parseInt(process.env.PORT || "5000"),
+      host: "0.0.0.0",
+      clientPort: parseInt(process.env.PORT || "5000"),
+      path: '/hmr',
+      timeout: 60000
+    },
+=======
+    hmr: { server },
+>>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
+=======
+    hmr: { server },
+>>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
+=======
+    hmr: { server },
+>>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
+=======
+    hmr: { server },
+>>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
+    allowedHosts: true,
+  };
+
+  const vite = await createViteServer({
+    ...viteConfig,
+    configFile: false,
+    customLogger: {
+      ...viteLogger,
+      error: (msg, options) => {
+        viteLogger.error(msg, options);
+        process.exit(1);
+      },
+    },
+    server: serverOptions,
+    appType: "custom",
+>>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
+=======
+>>>>>>> parent of 444051b (Checkpoint before assistant change: Fix: Resolve dependency issues and configure Vite server for correct port and hmr)
   });
 
   app.use(vite.middlewares);

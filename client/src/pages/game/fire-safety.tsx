@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GameModule } from "@/shared/schema";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/api";
 import { useSound } from "@/lib/use-sound";
 import {
@@ -25,13 +25,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import confetti from "canvas-confetti";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
-import { useSound } from "@/hooks/use-sound";
-import { useState } from "react";
 
 export default function FireSafetyGame() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient(); // Moved here
   const { user } = useAuth();
   const { play } = useSound();
   const [selectedModule, setSelectedModule] = useState<GameModule | null>(null);
