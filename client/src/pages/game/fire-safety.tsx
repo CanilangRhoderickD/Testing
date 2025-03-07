@@ -120,18 +120,12 @@ export default function FireSafetyGame() {
           ))}
         </div>
         <div className="space-y-4">
-          <div className="flex flex-col items-center gap-2">
-            <div className="bg-muted px-4 py-2 rounded-md mb-2">
-              <p className="text-sm font-medium">Word length: {data.correctWord.length} letters</p>
-            </div>
-            <Input
-              value={state.userGuess}
-              onChange={(e) => handlePictureWordGuess(e.target.value)}
-              placeholder="What's the word?"
-              className="text-center text-xl"
-              maxLength={data.correctWord.length}
-            />
-          </div>
+          <Input
+            value={state.userGuess}
+            onChange={(e) => handlePictureWordGuess(e.target.value)}
+            placeholder="What's the word?"
+            className="text-center text-xl"
+          />
           <p className="text-sm text-center text-muted-foreground">
             Attempts: {state.attempts}
           </p>
@@ -165,6 +159,7 @@ export default function FireSafetyGame() {
           userGuess: guess
         }
       }));
+<<<<<<< HEAD
       
       // Check if the guess is correct
 <<<<<<< HEAD
@@ -176,6 +171,8 @@ export default function FireSafetyGame() {
         play("success");
         submitProgress(selectedModule!.id, 100);
       }
+=======
+>>>>>>> parent of b437ded (Assistant checkpoint: Fixed game issues and added letter count indicators)
     };
 
     return (
@@ -546,10 +543,13 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
     const guess = e.target.value.toUpperCase();
     setGameState({ ...state, userGuess: guess });
 
+<<<<<<< HEAD
     // Log for debugging
     console.log(`Current guess: ${guess}, Expected word: ${data.word}`);
     
     // Check if the guess matches the word (case insensitive)
+=======
+>>>>>>> parent of b437ded (Assistant checkpoint: Fixed game issues and added letter count indicators)
     if (guess.toLowerCase() === data.word.toLowerCase()) {
 <<<<<<< HEAD
       console.log("Match found!");
@@ -573,11 +573,15 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
           Unscramble the word above related to fire safety
         </p>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> parent of b437ded (Assistant checkpoint: Fixed game issues and added letter count indicators)
         <Input
           value={state.userGuess}
           onChange={handleInputChange}
           placeholder="Enter your guess"
           className="text-center text-xl"
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
           maxLength={state.scrambledWord.length}
@@ -605,6 +609,10 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
             </p>
           )}
         </div>
+=======
+          maxLength={state.scrambledWord.length}
+        />
+>>>>>>> parent of b437ded (Assistant checkpoint: Fixed game issues and added letter count indicators)
       </div>
     </div>
   );
@@ -636,18 +644,12 @@ const PictureWordGame = ({ data, gameState, setGameState, onComplete }: any) => 
         ))}
       </div>
       <div className="space-y-4">
-        <div className="flex flex-col items-center gap-2">
-          <div className="bg-muted px-4 py-2 rounded-md mb-2">
-            <p className="text-sm font-medium">Word length: {data.correctWord.length} letters</p>
-          </div>
-          <Input
-            value={state.userGuess}
-            onChange={handleGuess}
-            placeholder="What's the word?"
-            className="text-center text-xl"
-            maxLength={data.correctWord.length}
-          />
-        </div>
+        <Input
+          value={state.userGuess}
+          onChange={handleGuess}
+          placeholder="What's the word?"
+          className="text-center text-xl"
+        />
         <p className="text-sm text-center text-muted-foreground">
           Attempts: {state.attempts}
         </p>
