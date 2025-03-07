@@ -43,6 +43,7 @@ export async function setupVite(app: Express, server: Server) {
     root: path.resolve("client"),
     appType: "spa",
 <<<<<<< HEAD
+<<<<<<< HEAD
     optimizeDeps: {
       force: true
     }
@@ -129,6 +130,8 @@ export async function setupVite(app: Express, server: Server) {
 >>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
 =======
 >>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
+=======
+>>>>>>> parent of 444051b (Checkpoint before assistant change: Fix: Resolve dependency issues and configure Vite server for correct port and hmr)
   });
 
   app.use(vite.middlewares);

@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import confetti from "canvas-confetti";
+<<<<<<< HEAD
 
 const queryClient = useQueryClient();
 
@@ -47,6 +48,8 @@ interface GameState {
     score: number;
   };
 }
+=======
+>>>>>>> parent of 444051b (Checkpoint before assistant change: Fix: Resolve dependency issues and configure Vite server for correct port and hmr)
 
 export default function FireSafetyGame() {
   const { user } = useAuth();
