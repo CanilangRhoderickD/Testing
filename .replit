@@ -17,6 +17,7 @@ externalPort = 80
 localPort = 5001
 externalPort = 3000
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 [workflows]
 runButton = "Run"
@@ -34,3 +35,5 @@ args = "npm run dev"
 >>>>>>> parent of df807aa (Checkpoint before assistant change: Configure Replit workflow to run npm dev script on port 3000.)
 =======
 >>>>>>> parent of 63cec40 (Checkpoint before assistant change: Configure Replit to use port 3000 and dynamically assign HMR port.)
+=======
+>>>>>>> parent of df807aa (Checkpoint before assistant change: Configure Replit workflow to run npm dev script on port 3000.)
