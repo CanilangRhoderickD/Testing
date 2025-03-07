@@ -54,6 +54,7 @@ export async function setupVite(app: Express, server: Server) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     hmr: { 
       server,
       clientPort: 5000,
@@ -90,6 +91,9 @@ export async function setupVite(app: Express, server: Server) {
       timeout: 60000
     },
 >>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
+=======
+    hmr: { server },
+>>>>>>> parent of ab31611 (Assistant checkpoint: Fix Vite server connection issues)
     allowedHosts: true,
   };
 
