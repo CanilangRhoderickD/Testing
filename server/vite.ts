@@ -40,10 +40,14 @@ export async function setupVite(app: Express, server: Server) {
       hmr: {
         server: server,
 <<<<<<< HEAD
+<<<<<<< HEAD
         port: 3000,
         clientPort: 443
 =======
         port: parseInt(process.env.PORT || "3000"),
+=======
+        port: port,
+>>>>>>> parent of ad12085 (Assistant checkpoint: Fix path resolution for local development)
         host: "0.0.0.0",
         clientPort: 443,
         path: '/hmr',
