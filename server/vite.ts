@@ -55,9 +55,7 @@ export async function setupVite(app: Express, server: Server) {
 <<<<<<< HEAD
     hmr: { 
       server,
-      port: parseInt(process.env.PORT || "5000"),
-      host: "0.0.0.0",
-      clientPort: parseInt(process.env.PORT || "5000"),
+      clientPort: 5000,
       path: '/hmr',
       timeout: 60000
     },

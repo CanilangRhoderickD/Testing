@@ -10,6 +10,7 @@ run = ["sh", "-c", "npm run dev"]
 [[ports]]
 localPort = 5000
 externalPort = 80
+<<<<<<< HEAD
 
 [[ports]]
 localPort = 5001
@@ -25,3 +26,5 @@ author = 40260443
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
+=======
+>>>>>>> parent of 63cec40 (Checkpoint before assistant change: Configure Replit to use port 3000 and dynamically assign HMR port.)
