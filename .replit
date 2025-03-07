@@ -11,6 +11,7 @@ run = ["sh", "-c", "npm run dev"]
 localPort = 5000
 externalPort = 80
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 [[ports]]
 localPort = 5001
@@ -31,3 +32,5 @@ args = "npm run dev"
 >>>>>>> parent of 63cec40 (Checkpoint before assistant change: Configure Replit to use port 3000 and dynamically assign HMR port.)
 =======
 >>>>>>> parent of df807aa (Checkpoint before assistant change: Configure Replit workflow to run npm dev script on port 3000.)
+=======
+>>>>>>> parent of 63cec40 (Checkpoint before assistant change: Configure Replit to use port 3000 and dynamically assign HMR port.)
