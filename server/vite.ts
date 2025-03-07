@@ -34,15 +34,13 @@ export async function setupVite(app: Express, server: Server) {
       middlewareMode: true,
       hmr: {
         server: server,
-        port: parseInt(process.env.PORT || "3000"),
-        host: "0.0.0.0",
-        clientPort: 443,
-        path: '/hmr',
-        protocol: 'ws'
+        port: 3000,
+        clientPort: 443
       }
     },
     root: path.resolve("client"),
     appType: "spa",
+<<<<<<< HEAD
     optimizeDeps: {
       force: true
     }
@@ -73,6 +71,8 @@ export async function setupVite(app: Express, server: Server) {
     server: serverOptions,
     appType: "custom",
 >>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
+=======
+>>>>>>> parent of 444051b (Checkpoint before assistant change: Fix: Resolve dependency issues and configure Vite server for correct port and hmr)
   });
 
   app.use(vite.middlewares);
