@@ -28,18 +28,12 @@ export async function setupVite(app: Express, server: Server) {
       middlewareMode: true,
       hmr: {
         server: server,
-        port: parseInt(process.env.PORT || "3000"),
-        host: "0.0.0.0",
-        clientPort: 443,
-        path: '/hmr',
-        protocol: 'ws'
+        port: 3000,
+        clientPort: 443
       }
     },
     root: path.resolve("client"),
     appType: "spa",
-    optimizeDeps: {
-      force: true
-    }
   });
 
   app.use(vite.middlewares);

@@ -25,13 +25,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import confetti from "canvas-confetti";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
-import { useSound } from "@/hooks/use-sound";
-import { useState } from "react";
+
+const queryClient = useQueryClient();
+
+interface GameState {
+  crossword?: {
+    selectedCell: { row: number; col: number } | null;
+    userAnswers: string[][];
+  };
+  pictureWord?: {
+    userGuess: string;
+    attempts: number;
+  };
+  wordScramble?: {
+    userGuess: string;
+    scrambledWord: string;
+    isCorrect: boolean;
+  };
+  quiz?: {
+    currentQuestion: number;
+    score: number;
+  };
+}
 
 export default function FireSafetyGame() {
-  const queryClient = useQueryClient(); // Moved here
   const { user } = useAuth();
   const { play } = useSound();
   const [selectedModule, setSelectedModule] = useState<GameModule | null>(null);
@@ -319,7 +336,7 @@ const WordScrambleGame = ({ data, gameState, setGameState, onComplete }: any) =>
 
     // Log for debugging
     console.log(`Current guess: ${guess}, Expected word: ${data.word}`);
-
+    
     // Check if the guess matches the word (case insensitive)
     if (guess.toLowerCase() === data.word.toLowerCase()) {
       console.log("Match found!");
@@ -523,23 +540,3 @@ const CrosswordGame = ({ data, gameState, setGameState, onComplete }: any) => {
     </div>
   );
 };
-
-interface GameState {
-  crossword?: {
-    selectedCell: { row: number; col: number } | null;
-    userAnswers: string[][];
-  };
-  pictureWord?: {
-    userGuess: string;
-    attempts: number;
-  };
-  wordScramble?: {
-    userGuess: string;
-    scrambledWord: string;
-    isCorrect: boolean;
-  };
-  quiz?: {
-    currentQuestion: number;
-    score: number;
-  };
-}
