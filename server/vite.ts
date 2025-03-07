@@ -23,6 +23,7 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+<<<<<<< HEAD
   const port = parseInt(process.env.PORT || "5000");
   const isLocalDev = process.env.NODE_ENV !== 'production' && !process.env.REPL_ID;
 
@@ -43,6 +44,33 @@ export async function setupVite(app: Express, server: Server) {
     optimizeDeps: {
       force: true
     }
+=======
+  const serverOptions = {
+    middlewareMode: true,
+    hmr: { 
+      server,
+      port: parseInt(process.env.PORT || "5000"),
+      host: "0.0.0.0",
+      clientPort: parseInt(process.env.PORT || "5000"),
+      path: '/hmr',
+      timeout: 60000
+    },
+    allowedHosts: true,
+  };
+
+  const vite = await createViteServer({
+    ...viteConfig,
+    configFile: false,
+    customLogger: {
+      ...viteLogger,
+      error: (msg, options) => {
+        viteLogger.error(msg, options);
+        process.exit(1);
+      },
+    },
+    server: serverOptions,
+    appType: "custom",
+>>>>>>> parent of 6fc37ac (Assistant checkpoint: Fixed server configuration and Vite setup)
   });
 
   app.use(vite.middlewares);
