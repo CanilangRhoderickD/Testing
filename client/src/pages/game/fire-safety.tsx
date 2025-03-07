@@ -27,7 +27,7 @@ import { Progress } from "@/components/ui/progress";
 import confetti from "canvas-confetti";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useSound } from "@/hooks/use-sound";
+import useSound from "@/hooks/use-sound";
 import { useState } from "react";
 
 export default function FireSafetyGame() {

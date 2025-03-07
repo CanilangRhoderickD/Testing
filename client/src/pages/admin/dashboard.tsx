@@ -63,6 +63,8 @@ export default function AdminDashboard() {
   const [selectedModule, setSelectedModule] = useState<GameModule | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [useMultipleInstances, setUseMultipleInstances] = useState(false);
+  const [moduleToDelete, setModuleToDelete] = useState<GameModule | null>(null); // Added state for module deletion
+
 
   const [newModule, setNewModule] = useState<Partial<GameModule>>({
     title: "",
@@ -237,19 +239,19 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedModule) return;
+  const handleDelete = async () => { //Corrected handleDelete function
+    if (!moduleToDelete) return;
 
     try {
       setLoading(true);
 
-      const response = await fetch(`/api/modules/${selectedModule.id}`, {
+      const response = await fetch(`/api/modules/${moduleToDelete.id}`, {
         method: "DELETE"
       });
 
       if (response.ok) {
         toast.success("Module deleted successfully");
-        setModules(modules.filter(mod => mod.id !== selectedModule.id));
+        setModules(modules.filter(mod => mod.id !== moduleToDelete.id));
         setIsDeleteDialogOpen(false);
       } else {
         const data = await response.json();
@@ -276,7 +278,7 @@ export default function AdminDashboard() {
   };
 
   const confirmDelete = (module: GameModule) => {
-    setSelectedModule(module);
+    setModuleToDelete(module); // Update moduleToDelete state
     setIsDeleteDialogOpen(true);
   };
 

@@ -86,28 +86,42 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || "5000");
   
   // Try to start the server, handle the case if port is already in use
-  server.on('error', (e: any) => {
-    if (e.code === 'EADDRINUSE') {
-      log(`Port ${port} is already in use, trying alternative port...`);
-      // Try using a different port
-      const alternativePort = port + 1;
-      server.listen({
-        port: alternativePort,
-        host: "0.0.0.0",
-        reusePort: true,
-      }, () => {
-        log(`serving on alternative port ${alternativePort}`);
-      });
-    } else {
-      log(`Server error: ${e.message}`);
-    }
-  });
+  const maxPortTries = 10; // Limit attempts to find an open port
+  let attemptCount = 0;
+  let currentPort = port;
   
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`Server running at http://0.0.0.0:${port}`);
-  });
+  function tryNextPort() {
+    attemptCount++;
+    if (attemptCount > maxPortTries) {
+      log(`Failed to find an available port after ${maxPortTries} attempts.`);
+      process.exit(1);
+      return;
+    }
+    
+    currentPort++;
+    log(`Trying alternative port ${currentPort}...`);
+    startListening();
+  }
+  
+  function startListening() {
+    server.once('error', (e: any) => {
+      if (e.code === 'EADDRINUSE') {
+        log(`Port ${currentPort} is already in use`);
+        tryNextPort();
+      } else {
+        log(`Server error: ${e.message}`);
+        process.exit(1);
+      }
+    });
+    
+    server.listen({
+      port: currentPort,
+      host: "0.0.0.0",
+      reusePort: false, // Changed to false to prevent multiple bindings
+    }, () => {
+      log(`Server running at http://0.0.0.0:${currentPort}`);
+    });
+  }
+  
+  startListening();
 })();

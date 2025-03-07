@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
 import {
   useQuery,
   useMutation,
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Attempting login with:", credentials);
         // Try both endpoints to see which one works
         let response;
-        
+
         // Try first endpoint from auth.ts
         try {
           response = await fetch("/api/login", {
@@ -54,14 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             body: JSON.stringify(credentials),
             credentials: "include"
           });
-          
+
           if (response.ok) {
             return await response.json();
           }
         } catch (e) {
           console.log("First login endpoint failed, trying second");
         }
-        
+
         // If we got here, try the second endpoint from routes.ts
         response = await fetch("/api/login", {
           method: "POST",
@@ -69,12 +69,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify(credentials),
           credentials: "include"
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Login failed: ${response.status} - ${errorText}`);
         }
-        
+
         return await response.json();
       } catch (err) {
         console.error("Login error:", err);

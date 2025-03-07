@@ -28,11 +28,16 @@ export async function setupVite(app: Express) {
       middlewareMode: true,
       hmr: {
         port: port,
-        host: "localhost",
+        host: "0.0.0.0",
         clientPort: port,
         path: "/hmr",
-        protocol: "ws",
+        protocol: "wss",
+        secure: true,
       },
+      allowedHosts: [
+        "39ad8dd0-038e-42ac-a22b-35e772975603-00-3pkqyn5pdevvq.sisko.replit.dev",
+        "*.replit.dev"
+      ],
     },
     resolve: {
       alias: {
