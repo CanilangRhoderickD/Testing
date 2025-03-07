@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GameModule } from "@/shared/schema";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/api";
 import { useSound } from "@/lib/use-sound";
 import {
