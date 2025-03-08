@@ -1,83 +1,67 @@
-import { motion } from "framer-motion";
-import ProfileCard from "@/components/creators/profile-card";
-
-const creators = [
-  {
-    name: "JEVERLY RUTH AMOY CABINTO",
-    role: "Lead Developer",
-    imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=jeverly"
-  },
-  {
-    name: "HARRY ANN MARIELLE ALJAS FAGEL",
-    role: "Game Designer",
-    imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=harry"
-  },
-  {
-    name: "FIARRAH MAE PALACI ULAT",
-    role: "Content Strategist",
-    imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=fiarrah"
-  }
-];
+import { useAuth } from "@/hooks/use-auth";
+import { GameCard } from "@/components/games/game-card";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Link } from "@/components/link";
 
 export default function HomePage() {
-  return (
-    <div className="min-h-screen bg-background">
-      <section className="py-20 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="container mx-auto px-4"
-        >
-          <h1 className="text-4xl font-bold mb-4">
-            APULA: A Web-Based Application to Educate and Empower Residents in Fire
-            Prevention Through Engaging Games
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Learn essential fire safety skills through interactive games and
-            simulations. Join us in creating a safer community.
-          </p>
-        </motion.div>
-      </section>
+  const { user } = useAuth();
 
-      <section className="py-20 bg-muted">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Meet the Team</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {creators.map((creator) => (
-              <motion.div
-                key={creator.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <ProfileCard {...creator} />
-              </motion.div>
+  const games = [
+    {
+      title: "Fire Safety Crossword",
+      description: "Test your knowledge of fire safety terms and concepts",
+      path: "/games/crossword",
+      icon: "puzzle",
+    },
+    {
+      title: "4 Pics 1 Word",
+      description: "Identify fire safety equipment and scenarios",
+      path: "/games/four-pics",
+      icon: "images",
+    },
+    {
+      title: "Word Scramble",
+      description: "Unscramble fire safety related words",
+      path: "/games/word-scramble",
+      icon: "shuffle",
+    },
+  ];
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 p-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-8">Welcome, {user?.username}!</h1>
+          
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Your Progress</h2>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="bg-card p-4 rounded-lg">
+                <div className="text-3xl font-bold">{user?.points}</div>
+                <div className="text-sm text-muted-foreground">Total Points</div>
+              </div>
+              <div className="bg-card p-4 rounded-lg">
+                <div className="text-3xl font-bold">Level {user?.level}</div>
+                <div className="text-sm text-muted-foreground">Current Level</div>
+              </div>
+              {user?.role === "admin" && (
+                <div className="bg-card p-4 rounded-lg">
+                  <Link to="/admin" className="text-3xl font-bold">Admin Panel</Link>
+                  <div className="text-sm text-muted-foreground">Manage site settings and content</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-semibold mb-4">Available Games</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {games.map((game) => (
+              <GameCard key={game.path} {...game} />
             ))}
           </div>
         </div>
-      </section>
-
-      <section className="py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-8">Project Overview</h2>
-          <div className="prose prose-lg mx-auto">
-            <p>
-              Fire incidents are a persistent threat to the safety and well-being
-              of individuals, businesses, and communities. This project aims to
-              address this challenge through an innovative, gamified approach to
-              fire safety education.
-            </p>
-            <p>
-              Our platform combines educational content with engaging gameplay
-              mechanics to make learning about fire prevention both effective and
-              enjoyable. Through interactive modules, real-life scenarios, and a
-              reward system, users can develop essential skills while tracking
-              their progress.
-            </p>
-          </div>
-        </div>
-      </section>
+      </main>
     </div>
   );
 }

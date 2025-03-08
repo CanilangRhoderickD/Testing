@@ -1,0 +1,95 @@
+INTRODUCTION
+Rationale
+Fire incidents are a persistent threat to the safety and
+well-being of individuals, businesses, and communities. In 2024,
+the city of Baguio experienced a concerning rise in fire-related
+incidents, endangering lives, causing significant property
+damage, and disrupting local economies. These incidents highlight
+the urgent need for effective fire prevention measures to protect
+residents and businesses from the devastating impacts of fire.
+Fire mitigation is particularly crucial in urban areas, as
+previous studies have shown that fire disasters not only result
+in great economic losses but also pose significant challenges to
+community restoration and safety. According to Kurata et al.
+(2022), understanding the factors affecting fire mitigation
+behaviors among citizens is essential to designing effective
+prevention strategies, particularly in densely populated regions
+like urban centers.
+Fire-related risks are often exacerbated by a lack of
+awareness, inadequate fire safety education, and neglect of
+essential preventive measures such as regular inspections, proper
+equipment maintenance, and compliance with safety standards.
+According to the Bureau of Fire Protection (BFP), smoking and
+open flames from cooking accounted for 190 and 155 fire cases,
+respectively, during the first quarter of 2024. Electrical
+
+ignition also posed a significant risk, with 144 cases caused by
+arcing, 97 by loose connections, and 62 by overloading (BFP,
+2024). These statistics underscore the pressing need for
+heightened fire safety awareness, particularly in residential
+settings, to address preventable causes effectively. Despite the
+presence of fire safety regulations, gaps in implementation and
+enforcement, combined with limited access to resources and
+professional expertise, leave communities vulnerable. Addressing
+these gaps requires a multi-faceted approach, including enhanced
+education, stronger enforcement of safety standards, and improved
+access to fire prevention tools and training.
+This capstone project aligns with the United Nations
+Sustainable Development Goal (SDG) 11, Sustainable Cities and
+Communities, by focusing on enhancing fire safety in Baguio City
+through innovative and proactive solutions. Recognizing the vital
+role of education and engagement in fostering a culture of
+safety, the project aims to empower residents with the knowledge,
+tools, and motivation to prevent and respond to fire incidents
+effectively. Specifically, the project contributes to SDG target
+11.5, which seeks to significantly reduce the number of deaths,
+people affected, and economic losses caused by disasters by 2030,
+with a focus on protecting vulnerable populations (Global Goals
+Website). By addressing fire safety risks, this initiative aligns
+Approval Sheet 2
+with the goal of mitigating the adverse effects of disasters and
+fostering resilience within communities.
+The Baguio City Bureau of Fire Protection (BFP) expressed
+deep concern over the rising number of fire incidents in the
+city, particularly those involving residential areas. Fire
+Officer Ola Bai-wo emphasized that these fires not only endanger
+lives but also strain their resources, making it increasingly
+challenging to respond effectively to emergencies. The station
+also highlighted recurring issues such as the public's limited
+awareness of fire safety protocols and the widespread neglect of
+preventive measures, including regular inspections and the use of
+standard materials for electrical installations. These sentiments
+underscore the need for community-based solutions that prioritize
+education, collaboration, and proactive measures to mitigate fire
+risks and foster a safer environment for all residents.
+Project Objectives
+ The main objective of this study is to develop a gamified
+web-based application that enhances fire safety awareness and
+prevention practices among residents of Baguio City.
+Specifically, it aims to achieve the following:
+
+1. Educate users on fire prevention measures, including proper
+electrical wiring practices and handling of open flames.
+2. Promote regular fire safety inspections through gamified
+tasks and incentives.
+3. Enhance community preparedness by simulating real-life fire
+scenarios and response techniques.
+4. Foster collaboration with local authorities and
+professionals to ensure accurate and practical fire safety
+guidelines.
+Proposed Solutions
+To address the persistent issue of fire incidents in Baguio
+City, this study proposes the development of a gamified web-based
+application as a comprehensive fire safety solution. The
+application combines education, technology, and community
+engagement to empower residents with practical knowledge and
+tools for fire prevention and response.
+The proposed application will feature interactive
+educational modules for both children and adults, using gamified
+elements such as challenges, rewards, and progressive levels to
+sustain engagement.
+Approval Sheet 2
+By incorporating this IT emerging technology, the solution
+aims to bridge existing gaps in fire safety education, improve
+awareness, and foster a proactive approach to fire prevention
+within the community. 

@@ -1,142 +1,103 @@
-
-import { pgTable, text, serial, integer, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, json, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-
-// Define content structure types for different game types
-export interface GameContent {
-  type: string;
-  data?: any;
-  instances?: any[];
-}
-
-export interface GameModule {
-  id: number;
-  title: string;
-  description: string;
-  ageGroup: string;
-  difficulty: string;
-  content: GameContent;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  age: integer("age").notNull(),
+  points: integer("points").default(0).notNull(),
+  level: integer("level").default(1).notNull(),
+  xp: integer("xp").default(0).notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
-  score: integer("score").default(0).notNull(),
-  progress: json("progress").$type<{
-    completedModules: string[];
-    badges: Array<{
-      id: string;
-      name: string;
-      description: string;
-      dateEarned: string;
-    }>;
-    currentLevel: number;
-    dailyChallenges: Array<{
-      date: string;
-      completed: boolean;
-      moduleId: string;
-    }>;
-    lastLoginDate: string;
-  }>().default({
-    completedModules: [],
-    badges: [],
-    currentLevel: 1,
-    dailyChallenges: [],
-    lastLoginDate: new Date().toISOString()
-  }).notNull()
+  isModerator: boolean("is_moderator").default(false).notNull(),
+});
+
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // 'level', 'score', 'completion'
+  requirement: integer("requirement").notNull(), // XP/score/count needed
+  badgeUrl: text("badge_url").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+});
+
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  achievementId: integer("achievement_id").notNull(),
+  earnedAt: timestamp("earned_at").notNull(),
 });
 
 export const gameModules = pgTable("game_modules", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'crossword', 'four_pics', 'word_scramble'
   description: text("description").notNull(),
-  ageGroup: text("age_group").notNull(),
-  difficulty: text("difficulty").notNull(),
-  content: json("content").$type<{
-    type: "quiz" | "simulation" | "tutorial" | "crossword" | "pictureWord" | "wordScramble";
-    data: Record<string, any>;
-  }>().notNull()
+  difficulty: integer("difficulty").notNull(), // 1-5
+  xpReward: integer("xp_reward").notNull(),
+  content: json("content").notNull(), // Store game-specific content
+  isActive: boolean("is_active").default(true).notNull(),
+  createdBy: integer("created_by").notNull(), // Admin/Moderator who created
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
 });
 
-// Achievement definitions
-export const achievements = {
-  BEGINNER: {
-    id: "beginner",
-    name: "Fire Safety Rookie",
-    description: "Complete your first module",
-    requirement: (progress: any) => progress.completedModules.length >= 1
-  },
-  INTERMEDIATE: {
-    id: "intermediate",
-    name: "Safety Scout",
-    description: "Complete 5 different modules",
-    requirement: (progress: any) => progress.completedModules.length >= 5
-  },
-  ADVANCED: {
-    id: "advanced",
-    name: "Fire Prevention Expert",
-    description: "Complete all modules in a difficulty level",
-    requirement: (progress: any) => progress.completedModules.length >= 10
-  },
-  DAILY_STREAK: {
-    id: "daily_streak",
-    name: "Daily Guardian",
-    description: "Complete 5 daily challenges",
-    requirement: (progress: any) => progress.dailyChallenges.filter((c: any) => c.completed).length >= 5
-  }
-};
+export const progress = pgTable("progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  gameType: text("game_type").notNull(),
+  completed: boolean("completed").default(false).notNull(),
+  score: integer("score").default(0).notNull(),
+  xpEarned: integer("xp_earned").default(0).notNull(),
+  completedAt: timestamp("completed_at"),
+});
 
-// Level requirements
-export const levelRequirements = [
-  0,    // Level 1
-  100,  // Level 2
-  250,  // Level 3
-  500,  // Level 4
-  1000, // Level 5
-];
-
+// Schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
-  password: true
+  password: true,
+  age: true,
 });
 
-export const insertGameModuleSchema = createInsertSchema(gameModules);
+export const insertAchievementSchema = createInsertSchema(achievements).pick({
+  name: true,
+  description: true,
+  type: true,
+  requirement: true,
+  badgeUrl: true,
+});
 
+export const insertGameModuleSchema = createInsertSchema(gameModules)
+  .pick({
+    name: true,
+    type: true,
+    description: true,
+    difficulty: true,
+    xpReward: true,
+    content: true,
+  })
+  .extend({
+    name: z.string().min(3, "Name must be at least 3 characters"),
+    type: z.enum(["crossword", "four_pics", "word_scramble"], {
+      required_error: "Please select a game type",
+    }),
+    description: z.string().min(10, "Description must be at least 10 characters"),
+    difficulty: z.number().min(1).max(5),
+    xpReward: z.number().min(10),
+    content: z.object({}).passthrough(),
+  });
+
+export const insertProgressSchema = createInsertSchema(progress);
+
+// Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type Achievement = typeof achievements.$inferSelect;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type Progress = typeof progress.$inferSelect;
 export type GameModule = typeof gameModules.$inferSelect;
 export type InsertGameModule = z.infer<typeof insertGameModuleSchema>;
-
-// Game type specific schemas
-export const CrosswordData = z.object({
-  grid: z.array(z.array(z.string())),
-  clues: z.object({
-    across: z.array(z.object({
-      number: z.number(),
-      clue: z.string(),
-      answer: z.string()
-    })),
-    down: z.array(z.object({
-      number: z.number(),
-      clue: z.string(),
-      answer: z.string()
-    }))
-  })
-});
-
-export const PictureWordData = z.object({
-  images: z.array(z.string()),
-  correctWord: z.string(),
-  hints: z.array(z.string())
-});
-
-export const WordScrambleData = z.object({
-  word: z.string(),
-  hint: z.string(),
-  category: z.string()
-});
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;

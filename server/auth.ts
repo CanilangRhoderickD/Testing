@@ -15,101 +15,105 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-export async function hashPassword(password: string) {
+async function hashPassword(password: string) {
+  console.log('Hashing password');
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  console.log('Password hashed:', `${buf.toString("hex")}.${salt}`);
   return `${buf.toString("hex")}.${salt}`;
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  // For development, allow simple password comparison
-  if (supplied === stored) {
-    return true;
-  }
-  
-  // Fall back to the secure comparison if the password has a salt
-  if (stored && stored.includes('.')) {
-    const [hashed, salt] = stored.split(".");
-    const hashedBuf = Buffer.from(hashed, "hex");
-    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
-  }
-  
-  return false;
+  console.log('Comparing passwords');
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  console.log('Passwords match:', timingSafeEqual(hashedBuf, suppliedBuf));
+  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function setupAuth(app: Express) {
+  console.log('Setting up authentication');
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || 'fireproof-secret-key',
-    resave: false,
+    secret: process.env.SESSION_SECRET || 'apula-fire-safety-secret-key',
+    resave: false, 
     saveUninitialized: false,
-    cookie: {
-      secure: false, // Set to false for development
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    },
+    cookie: { secure: false, httpOnly: true, sameSite: 'lax' },
     store: storage.sessionStore,
   };
+  console.log('Session settings:', sessionSettings);
 
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
 
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000'); // Adjust the origin as needed
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+  });
+
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      try {
-        console.log(`Login attempt for: ${username}`);
-        const user = await storage.getUserByUsername(username);
-        if (!user) {
-          console.log(`User not found: ${username}`);
-          return done(null, false);
-        }
-        const passwordMatch = await comparePasswords(password, user.password);
-        if (!passwordMatch) {
-          console.log(`Password incorrect for: ${username}`);
-          return done(null, false);
-        }
-        console.log(`Login successful for: ${username}`);
+      const user = await storage.getUserByUsername(username);
+      if (!user || !(await comparePasswords(password, user.password))) {
+        return done(null, false);
+      } else {
         return done(null, user);
-      } catch (error) {
-        console.error(`Login error:`, error);
-        return done(error);
       }
     }),
   );
 
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (error) {
-      done(error);
-    }
+    const user = await storage.getUser(id);
+    done(null, user);
   });
 
   app.post("/api/register", async (req, res, next) => {
-    try {
-      const existingUser = await storage.getUserByUsername(req.body.username);
-      if (existingUser) {
-        return res.status(400).send("Username already exists");
-      }
-
-      const user = await storage.createUser({
-        ...req.body,
-        password: await hashPassword(req.body.password),
-      });
-
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
-    } catch (error) {
-      next(error);
+    console.log('Received registration request:', req.body);
+    console.log('Validating input fields');
+    const { username, password, age } = req.body;
+    if (!username || !password || age === undefined) {
+      console.log('Missing required fields');
+      return res.status(400).send('Missing required fields');
     }
+
+    const existingUser = await storage.getUserByUsername(username);
+    if (existingUser) {
+      console.log('Username already exists:', username);
+      return res.status(400).send('Username already exists');
+    }
+
+    // Get all users to check if this is the first user
+    const allUsers = await storage.getAllUsers();
+    const isFirstUser = allUsers.length === 0;
+
+    const user = await storage.createUser({
+      ...req.body,
+      password: await hashPassword(req.body.password),
+      isAdmin: isFirstUser // Make the first user an admin
+    });
+
+    req.login(user, (err) => {
+      if (err) {
+        console.log('Error logging in after registration:', err);
+        return next(err);
+      }
+      console.log('User registered and logged in:', user);
+      res.status(201).json(user);
+    });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+  app.post("/api/login", passport.authenticate("local", { failureFlash: true }), (req, res) => {
+    console.log('Login attempt for user:', req.body.username);
+    if (!req.user) {
+      console.log('Authentication failed for user:', req.body.username);
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    console.log('User logged in:', req.user);
     res.status(200).json(req.user);
   });
 
@@ -121,7 +125,17 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    console.log('Checking authentication for /api/user');
+    if (!req.isAuthenticated()) {
+      console.log('User not authenticated');
+      return res.sendStatus(401);
+    }
+    console.log('User authenticated:', req.user);
+    // Return user with their achievements count
+    res.json({
+      ...req.user,
+      // Include achievement count if needed
+      achievementsCount: storage.userAchievements.get(req.user.id)?.length || 0
+    });
   });
 }

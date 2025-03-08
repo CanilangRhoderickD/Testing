@@ -1,141 +1,132 @@
-import { useForm } from "react-hook-form";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
-import type { InsertUser } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 
-export default function AuthPage() {
+const AuthPage: React.FC = () => {
+  // Check URL for tab parameter before setting initial state
+  const initialIsLogin = (() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') !== 'register';
+  })();
+  
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [age, setAge] = useState<number | undefined>();
+  const [error, setError] = useState("");
+  const { login, register, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
 
-  const loginForm = useForm<InsertUser>();
-  const registerForm = useForm<InsertUser>();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
 
-  if (user) {
-    setLocation("/");
-    return null;
-  }
+    try {
+      if (isLogin) {
+        await login(username, password);
+      } else {
+        // Make sure age is a number and not undefined
+        if (age === undefined) {
+          setError("Age is required");
+          return;
+        }
+        await register(username, password, age);
+      }
+      setLocation("/");
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      <div className="flex-1 flex items-center justify-center">
-        <Card className="w-[400px]">
-          <CardHeader>
-            <CardTitle>Welcome to APULA</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
-              </TabsList>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>{isLogin ? "Login" : "Register"}</CardTitle>
+          <CardDescription>
+            {isLogin ? "Enter your credentials to access your account" : "Create a new account"}
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="bg-red-50 p-3 rounded-md text-red-600 text-sm">
+                {error}
+              </div>
+            )}
 
-              <TabsContent value="login">
-                <form
-                  onSubmit={loginForm.handleSubmit((data) => {
-                    console.log("Login attempt with:", data);
-                    loginMutation.mutate(data);
-                  })}
-                  className="space-y-4"
-                >
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
-                      <Input
-                        id="username"
-                        placeholder="admin"
-                        {...loginForm.register("username")}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="admin"
-                        {...loginForm.register("password")}
-                        required
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Please wait
-                        </>
-                      ) : (
-                        "Login"
-                      )}
-                    </Button>
-                  </div>
-                  <div className="mt-2 text-xs text-center text-muted-foreground">
-                    Try username: "admin" and password: "admin123"
-                  </div>
-                </form>
-              </TabsContent>
+            <div className="space-y-2">
+              <label htmlFor="username" className="text-sm font-medium">
+                Username
+              </label>
+              <Input
+                id="username"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
 
-              <TabsContent value="register">
-                <form
-                  onSubmit={registerForm.handleSubmit((data) =>
-                    registerMutation.mutate(data)
-                  )}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-username">Username</Label>
-                    <Input
-                      id="reg-username"
-                      {...registerForm.register("username")}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="reg-password">Password</Label>
-                    <Input
-                      id="reg-password"
-                      type="password"
-                      {...registerForm.register("password")}
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={registerMutation.isPending}
-                  >
-                    {registerMutation.isPending && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Register
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <label htmlFor="age" className="text-sm font-medium">
+                  Age
+                </label>
+                <Input
+                  id="age"
+                  type="number"
+                  placeholder="Enter your age"
+                  value={age || ""}
+                  onChange={(e) => setAge(parseInt(e.target.value) || undefined)}
+                  required
+                />
+              </div>
+            )}
           </CardContent>
-        </Card>
-      </div>
-      <div className="hidden lg:flex flex-1 bg-primary items-center justify-center text-primary-foreground">
-        <div className="max-w-md text-center">
-          <h1 className="text-4xl font-bold mb-4">
-            Fire Safety Education Platform
-          </h1>
-          <p className="text-lg">
-            Learn about fire safety through interactive games and simulations.
-            Track your progress and earn badges as you master essential fire
-            prevention skills.
-          </p>
-        </div>
-      </div>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Processing..." : isLogin ? "Login" : "Register"}
+            </Button>
+            <div className="text-sm text-center">
+              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              <button
+                type="button"
+                className="text-primary hover:underline"
+                onClick={() => setIsLogin(!isLogin)}
+              >
+                {isLogin ? "Register" : "Login"}
+              </button>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
     </div>
   );
-}
+};
+
+export default AuthPage;
