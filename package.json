@@ -2,7 +2,7 @@
   "name": "rest-express",
   "version": "1.0.0",
   "type": "module",
-  "homepage": "https://canilangrhoderickd.github.io/rest-express",
+  "homepage": "https://canilangrhoderickd.github.io/Testing",
   "license": "MIT",
   "scripts": {
     "dev": "tsx server/index.ts",
