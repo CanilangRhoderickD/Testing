@@ -42,7 +42,8 @@ const AuthPage: React.FC = () => {
         }
         await register(username, password, age);
       }
-      setLocation("/");
+      // Redirect to the dashboard after successful login/registration
+      setLocation("/dashboard");
     } catch (err: any) {
       setError(err.message || "An error occurred");
     }

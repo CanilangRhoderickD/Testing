@@ -51,8 +51,8 @@ export default function Navbar() {
                 <NavigationMenuItem>
                   <Button
                     variant="outline"
-                    onClick={() => logoutMutation.mutate()}
-                    disabled={logoutMutation.isPending}
+                    onClick={logout}
+                    disabled={isPending}
                   >
                     Logout
                   </Button>

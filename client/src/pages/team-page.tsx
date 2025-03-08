@@ -5,9 +5,8 @@ import { Sidebar } from '@/components/layout/sidebar';
 
 export default function TeamPage() {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-6">
+    <div className="min-h-screen">
+      <main className="p-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">Our Team</h1>

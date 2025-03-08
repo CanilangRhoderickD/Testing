@@ -37,6 +37,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/team" component={TeamPage} />
       <Route path="/about" component={AboutPage} />
+      <Route path="/game/:id" component={GamePage} />
       <Route path="/game" component={GamePage} />
       <Route component={NotFound} />
     </Switch>

@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 
 export const Sidebar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, isPending, logout } = useAuth();
 
   const navItems = [
-    { label: "Home", icon: <Home className="h-5 w-5 mr-2" />, href: "/" },
+    { label: "Home", icon: <Home className="h-5 w-5 mr-2" />, href: "/dashboard" },
     { label: "Games", icon: <BookOpen className="h-5 w-5 mr-2" />, href: "/games" },
     { label: "Achievements", icon: <Medal className="h-5 w-5 mr-2" />, href: "/achievements" },
     { label: "Team", icon: <Users className="h-5 w-5 mr-2" />, href: "/team" },
@@ -51,7 +51,7 @@ export const Sidebar: React.FC = () => {
           </ul>
         </div>
 
-        {user?.isAdmin && (
+        {user && user.isAdmin && (
           <div className="mb-6">
             <p className="text-xs uppercase text-gray-500 mb-2">Admin</p>
             <ul className="space-y-2">
@@ -75,6 +75,7 @@ export const Sidebar: React.FC = () => {
           onClick={logout}
           variant="ghost"
           className="w-full flex items-center justify-start text-white"
+          disabled={isPending}
         >
           <LogOut className="h-5 w-5 mr-2" />
           Logout
