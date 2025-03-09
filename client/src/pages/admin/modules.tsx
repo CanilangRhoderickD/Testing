@@ -71,6 +71,17 @@ export default function GameModules() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <main className="flex-1 p-8 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -78,8 +89,12 @@ export default function GameModules() {
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-4xl font-bold">Game Modules</h1>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button onClick={() => setIsDialogOpen(true)} disabled={createMutation.isPending}>
+              {createMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}
               Add New Module
             </Button>
           </div>

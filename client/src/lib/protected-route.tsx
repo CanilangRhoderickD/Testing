@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import { Route, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { Route, useLocation } from "wouter";
 
 export function ProtectedRoute({
   path,
@@ -11,13 +11,14 @@ export function ProtectedRoute({
   path: string;
   component: React.ComponentType;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, isPending } = useAuth();
   const [, setLocation] = useLocation();
 
   return (
     <Route path={path}>
-      {() => {
-        if (isLoading) {
+      {(params) => {
+        // Handling case when authentication is in progress
+        if (isPending) {
           return (
             <div className="flex items-center justify-center min-h-screen">
               <Loader2 className="h-8 w-8 animate-spin text-border" />
@@ -25,12 +26,19 @@ export function ProtectedRoute({
           );
         }
 
+        // If user is not authenticated and we're not in a loading state, redirect to auth
         if (!user) {
-          // Use effect in the rendered component instead of during render
-          React.useEffect(() => {
-            setLocation("/auth");
-          }, [setLocation]);
+          // Use useEffect to ensure redirect happens after render
+          useEffect(() => {
+            // Add a small delay to ensure state is fully updated
+            const redirectTimer = setTimeout(() => {
+              setLocation("/auth");
+            }, 10);
+            
+            return () => clearTimeout(redirectTimer);
+          }, []);
           
+          // Show loading while redirecting
           return (
             <div className="flex items-center justify-center min-h-screen">
               <Loader2 className="h-8 w-8 animate-spin text-border" />
@@ -38,7 +46,8 @@ export function ProtectedRoute({
           );
         }
 
-        return <Component />;
+        // User is authenticated, render the protected component
+        return <Component {...params} />;
       }}
     </Route>
   );

@@ -18,38 +18,77 @@ export default function TeamPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             {/* Team Member 1 */}
-            <div className="bg-card rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-primary/10">
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 bg-muted rounded-full mb-4 flex items-center justify-center overflow-hidden">
-                  <span className="text-4xl">👩‍💻</span>
+                <div className="w-36 h-36 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full mb-6 flex items-center justify-center overflow-hidden shadow-inner ring-4 ring-white/10">
+                  {/* You can replace with your image path */}
+                  <img 
+                    src="/images/team/member1.jpg" 
+                    alt="Jeverly Ruth Amoy Cabinto" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback in case image doesn't load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = '<span class="text-5xl animate-pulse">👩‍💻</span>';
+                    }}
+                  />
                 </div>
-                <h3 className="text-xl font-bold">Jeverly Ruth Amoy Cabinto</h3>
-                <p className="text-muted-foreground mt-2 text-center">Lead Developer</p>
-                <p className="mt-4 text-center">Frontend & game mechanics specialist with a passion for creating engaging user experiences.</p>
+                <h3 className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Jeverly Ruth Amoy Cabinto</h3>
+                <div className="mt-2 px-4 py-1 bg-primary/10 rounded-full">
+                  <p className="text-primary font-medium">Lead Developer</p>
+                </div>
+                <p className="mt-4 text-center leading-relaxed">Frontend & game mechanics specialist with a passion for creating engaging user experiences.</p>
               </div>
             </div>
             
             {/* Team Member 2 */}
-            <div className="bg-card rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-primary/10">
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 bg-muted rounded-full mb-4 flex items-center justify-center overflow-hidden">
-                  <span className="text-4xl">👨‍💻</span>
+                <div className="w-36 h-36 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full mb-6 flex items-center justify-center overflow-hidden shadow-inner ring-4 ring-white/10">
+                  {/* You can replace with your image path */}
+                  <img 
+                    src="/images/team/member2.jpg" 
+                    alt="Harry Ann Marielle Aljas Fagel" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback in case image doesn't load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = '<span class="text-5xl animate-pulse">👨‍💻</span>';
+                    }}
+                  />
                 </div>
-                <h3 className="text-xl font-bold">Harry Ann Marielle Aljas Fagel</h3>
-                <p className="text-muted-foreground mt-2 text-center">Backend Developer</p>
-                <p className="mt-4 text-center">Database architecture and server-side logic expert focused on system reliability and performance.</p>
+                <h3 className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Harry Ann Marielle Aljas Fagel</h3>
+                <div className="mt-2 px-4 py-1 bg-primary/10 rounded-full">
+                  <p className="text-primary font-medium">Backend Developer</p>
+                </div>
+                <p className="mt-4 text-center leading-relaxed">Database architecture and server-side logic expert focused on system reliability and performance.</p>
               </div>
             </div>
             
             {/* Team Member 3 */}
-            <div className="bg-card rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-primary/10">
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 bg-muted rounded-full mb-4 flex items-center justify-center overflow-hidden">
-                  <span className="text-4xl">👩‍💻</span>
+                <div className="w-36 h-36 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full mb-6 flex items-center justify-center overflow-hidden shadow-inner ring-4 ring-white/10">
+                  {/* You can replace with your image path */}
+                  <img 
+                    src="/images/team/member3.jpg" 
+                    alt="Fiarrah Mae Palaci Ulat" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback in case image doesn't load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = '<span class="text-5xl animate-pulse">👩‍💻</span>';
+                    }}
+                  />
                 </div>
-                <h3 className="text-xl font-bold">Fiarrah Mae Palaci Ulat</h3>
-                <p className="text-muted-foreground mt-2 text-center">UI/UX Designer</p>
-                <p className="mt-4 text-center">Creative designer with a focus on intuitive interfaces and accessible educational content.</p>
+                <h3 className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">Fiarrah Mae Palaci Ulat</h3>
+                <div className="mt-2 px-4 py-1 bg-primary/10 rounded-full">
+                  <p className="text-primary font-medium">UI/UX Designer</p>
+                </div>
+                <p className="mt-4 text-center leading-relaxed">Creative designer with a focus on intuitive interfaces and accessible educational content.</p>
               </div>
             </div>
           </div>

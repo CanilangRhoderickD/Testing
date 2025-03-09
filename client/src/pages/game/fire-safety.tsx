@@ -203,33 +203,49 @@ export default function FireSafetyGame() {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
           {isLoading ? (
-            <p>Loading games...</p>
+            <div className="col-span-full flex justify-center p-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
           ) : filteredModules && filteredModules.length > 0 ? (
             filteredModules.map((module) => (
-              <Card
-                key={module.id}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => startModule(module)}
-              >
-                <CardHeader>
-                  <CardTitle>{module.title}</CardTitle>
-                  <div className="flex gap-2 mt-1">
-                    <Badge variant="outline">{module.ageGroup}</Badge>
-                    <Badge variant="outline">{module.difficulty}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p>{module.description}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">
-                    Start Game
-                  </Button>
-                </CardFooter>
-              </Card>
+              <div key={module.id}>
+                <Card
+                  className="cursor-pointer hover:shadow-md transition-shadow h-full flex flex-col"
+                  onClick={() => startModule(module)}
+                >
+                  <CardHeader>
+                    <CardTitle>{module.title}</CardTitle>
+                    <div className="flex gap-2 mt-1">
+                      <Badge variant="outline">{module.ageGroup}</Badge>
+                      <Badge variant="outline">{module.difficulty}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p>{module.description}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" className="w-full">
+                      Start Game
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
             ))
           ) : (
-            <p>No games available with the selected filters.</p>
+            <div className="col-span-full text-center p-8 text-muted-foreground">
+              <p>No games available with the selected filters.</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => {
+                  // Reset filters
+                  setAgeGroup("all");
+                  setDifficulty("all");
+                }}
+              >
+                Reset Filters
+              </Button>
+            </div>
           )}
         </div>
       );

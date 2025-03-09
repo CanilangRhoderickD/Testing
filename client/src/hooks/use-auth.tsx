@@ -1,5 +1,4 @@
-
-import { useState, createContext, useContext, ReactNode, useEffect } from "react";
+import { useState, createContext, useContext, ReactNode, useEffect, useCallback } from "react";
 import axios from "axios";
 import { User } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -85,24 +84,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async () => {
     setIsPending(true);
     try {
-      await axios.post("/api/logout", {}, { withCredentials: true });
+      // First set the user to null to prevent any authenticated requests
       setUser(null);
+      
+      // Then perform the logout request
+      await axios.post("/api/logout", {}, { withCredentials: true });
+      
+      // Clear query cache
       queryClient.clear();
-      // Redirect to the landing page after logout
+      
+      // Navigate to the main page
+      setIsPending(false);
+      
+      // Use replace instead of setting href directly to avoid history issues
       window.location.replace("/");
     } catch (error) {
       console.error("Logout failed:", error);
-      // Even if server request fails, clear local state
-      setUser(null);
-      queryClient.clear();
-      window.location.replace("/");
-    } finally {
       setIsPending(false);
     }
-  };
+    return Promise.resolve();
+  }, [queryClient]);
 
   return (
     <AuthContext.Provider value={{ user, isLoading, isPending, login, register, logout }}>

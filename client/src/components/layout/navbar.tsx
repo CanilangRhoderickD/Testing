@@ -25,7 +25,7 @@ export default function Navbar() {
               <>
                 <NavigationMenuItem>
                   <Link href="/game">
-                    <span className="text-sm font-medium cursor-pointer">Play Game</span>
+                    <span className="text-sm font-medium cursor-pointer">Games</span>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>

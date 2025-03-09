@@ -19,7 +19,9 @@ import AdminAchievementsPage from "./pages/admin/achievements";
 import LandingPage from "@/pages/landing-page";
 import TeamPage from "./pages/team-page";
 import AboutPage from "./pages/about-page";
-import GamePage from "@/pages/game-page";
+import GamePage from "./pages/game-page.tsx";
+import FireSafety from "./pages/games/fire-safety"; // Added import for FireSafety component
+
 
 function Router() {
   return (
@@ -48,7 +50,25 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
+        <Switch>
+          <Route path="/" component={LandingPage} />
+          <Route path="/auth" component={AuthPage} />
+          <Route path="/team" component={TeamPage} />
+          <Route path="/about" component={AboutPage} />
+          <ProtectedRoute path="/home" component={HomePage} />
+          <ProtectedRoute path="/dashboard" component={HomePage} />
+          <ProtectedRoute path="/achievements" component={AchievementsPage} />
+          <ProtectedRoute path="/game" component={GamePage} />
+          <ProtectedRoute path="/game/:gameId" component={GamePage} />
+          <ProtectedRoute path="/games/crossword" component={Crossword} />
+          <ProtectedRoute path="/games/four-pics" component={FourPics} />
+          <ProtectedRoute path="/games/word-scramble" component={WordScramble} />
+          <ProtectedRoute path="/game/fire-safety" component={FireSafety} />
+          <ProtectedRoute path="/admin" component={AdminDashboard}  />
+          <ProtectedRoute path="/admin/modules" component={AdminModules}  />
+          <ProtectedRoute path="/admin/achievements" component={AdminAchievementsPage}  />
+          <Route component={NotFound} />
+        </Switch>
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
